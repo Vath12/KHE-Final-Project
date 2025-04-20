@@ -24,4 +24,4 @@ EXPOSE 8501
 
 # ENTRYPOINT ["streamlit", "run", "src/Home.py", "--server.port=8501", "--server.address=0.0.0.0"] 
 
-CMD ["streamlit", "run", "Home.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "KHE_LandingPage.py", "--server.port=8501", "--server.address=0.0.0.0"]
