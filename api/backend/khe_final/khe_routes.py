@@ -9,8 +9,14 @@ from backend.db_connection import db as database
 # Create a new Blueprint object, which is a collection of routes.
 users = Blueprint('users', __name__)
 
+@users.route('/helloWorld', methods=['GET','PUT'])
+def hello_world():
+    response = make_response("hello world")
+    response.status_code = 9999
+    return response
+
 @users.route('/trylogin/<username>/<password>', methods=['GET','PUT'])
-def get_products(username,password):
+def try_login(username,password):
 
     if (len(username) < 64 or len(password)!=64):
         response.status_code = 99
