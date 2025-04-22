@@ -10,19 +10,8 @@ import os
 # Create a new Blueprint object, which is a collection of routes.
 users = Blueprint('users', __name__)
 
-<<<<<<< Updated upstream
-@users.route('/helloWorld', methods=['GET','PUT'])
-def hello_world():
-    response = make_response("hello world")
-    response.status_code = 9999
-    return response
-
-@users.route('/trylogin/<username>/<password>', methods=['GET','PUT'])
-def try_login(username,password):
-=======
 def log(message):
     os.write(1,bytes(message+"\n","utf-8"))
->>>>>>> Stashed changes
 
 def userIDFromSessionKey(session_key):
     cursor = database.get_db().cursor()
