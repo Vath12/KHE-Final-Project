@@ -5,7 +5,7 @@ def manage_class_page():
     st.set_page_config(page_title="Manage Class", layout="centered")
     
     # # Authorization check
-    # if st.session_state.get('role') != 'ta':
+    # if not st.session_state.get('is_ta', False):
     #     st.error("⛔ Unauthorized access. TA privileges required.")
     #     st.stop()
 

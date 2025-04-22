@@ -24,4 +24,4 @@ EXPOSE 8501
 
 # ENTRYPOINT ["streamlit", "run", "src/Home.py", "--server.port=8501", "--server.address=0.0.0.0"] 
 
-CMD ["streamlit", "run", "pages/add_class.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "pages/manage_class.py", "--server.port=8501", "--server.address=0.0.0.0"]

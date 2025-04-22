@@ -3,8 +3,8 @@ import streamlit as st
 st.set_page_config(page_title="homepage", layout="wide")
 
 # ---------- Session State Initialization ----------
-if 'role' not in st.session_state:
-    st.session_state.role = 'ta' # student for student view, ta for TA view
+if 'is_ta' not in st.session_state:
+    st.session_state.is_ta = True  # True for TA, False for student
 
 # ---------- Sidebar ---------- 
 st.sidebar.markdown(
@@ -37,7 +37,7 @@ st.sidebar.markdown(
 st.sidebar.markdown("<div class='sidebar-title'>📘 GradeBook</div>", unsafe_allow_html=True)
 
 # TA-specific sidebar options
-if st.session_state.role == 'ta':
+if st.session_state.is_ta:
     st.sidebar.markdown("<div class='ta-section'>", unsafe_allow_html=True)
     st.sidebar.markdown("### TA Controls")
     if st.sidebar.button("➕ Create New Class", use_container_width=True):
@@ -85,7 +85,7 @@ for i in range(6):  # 2 rows of 3 cards
             )
             
             # TA-specific management buttons
-            if st.session_state.role == 'ta':
+            if st.session_state.is_ta:
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     if st.button("View Class", key=f"view_{i}", use_container_width=True):
@@ -95,7 +95,7 @@ for i in range(6):  # 2 rows of 3 cards
                         st.switch_page("pages/manage_class.py")
 
 # Add Class Floating Button (TA only)
-if st.session_state.role == 'ta':
+if st.session_state.is_ta:
     st.markdown(
         """
         <style>

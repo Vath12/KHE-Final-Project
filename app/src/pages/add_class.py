@@ -5,7 +5,7 @@ def add_class_page():
     st.set_page_config(page_title="Add New Class", layout="centered")
 
     # # Authorization check
-    # if st.session_state.get('role') != 'ta':
+    # if not st.session_state.get('is_ta', False):
     #     st.error("⛔ Unauthorized access. TA privileges required.")
     #     st.stop()
 
@@ -42,20 +42,20 @@ def add_class_page():
             col1, col2 = st.columns(2)
             with col1:
                 class_name = st.text_input(
-                    "Class Name",
+                    "Class Name" + "<span class='required-asterisk'>*</span>",
                     help="Enter the official course name",
                     key="class_name"
                 )
                 
                 class_code = st.text_input(
-                    "Class Code",
+                    "Class Code" + "<span class='required-asterisk'>*</span>",
                     help="Unique course code (e.g. CS-101)",
                     key="class_code"
                 )
                 
             with col2:
                 section_number = st.number_input(
-                    "Section Number",
+                    "Section Number" + "<span class='required-asterisk'>*</span>",
                     min_value=1,
                     max_value=50,
                     value=1,
@@ -63,7 +63,7 @@ def add_class_page():
                 )
                 
                 schedule = st.multiselect(
-                    "Class Days",
+                    "Class Days" + "<span class='required-asterisk'>*</span>",
                     options=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
                     default=["Monday", "Wednesday"],
                     key="days"
@@ -74,13 +74,13 @@ def add_class_page():
             start_time, end_time = st.columns(2)
             with start_time:
                 class_start = st.time_input(
-                    "Start Time",
+                    "Start Time" + "<span class='required-asterisk'>*</span>",
                     value=time(9, 0),
                     key="start_time"
                 )
             with end_time:
                 class_end = st.time_input(
-                    "End Time",
+                    "End Time" + "<span class='required-asterisk'>*</span>",
                     value=time(10, 30),
                     key="end_time"
                 )
