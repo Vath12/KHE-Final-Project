@@ -10,7 +10,13 @@ if (result.status_code != 200):
     st.switch_page("Login.py")
 else:
     userInfo = result.json()[0] #the query returns an array with one dictionary
+
+result = requests.get(f"http://api:4000/classlist/{st.session_state.get('session_key')}")
+classes = result.json()
+
 st.set_page_config(page_title="homepage", layout="wide")
+
+
 
 # ---------- Sidebar ----------
 st.sidebar.markdown(
@@ -36,10 +42,10 @@ st.sidebar.markdown(
 )
 
 st.sidebar.markdown("<div class='sidebar-title'>GradeBook</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
 st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
 st.sidebar.markdown("<div class='sidebar-link'>Courses</div>", unsafe_allow_html=True)
 st.sidebar.markdown("<div class='sidebar-link'>Instructors</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
 
 # ---------- Page Title ----------
 st.markdown(
@@ -54,9 +60,9 @@ st.markdown(
 # ---------- Class Cards Layout ----------
 cols = st.columns(3)
 
-for i in range(6):  # 2 rows of 3 cards
+for i in range(len(classes)):  # 2 rows of 3 cards
     with cols[i % 3]:
-        if st.button("Class",key = 1888888+i,use_container_width=True):
+        if st.button(classes[i]["name"],key = 1888888+i,use_container_width=True):
             st.switch_page("pages/classes.py")
         #st.markdown(
         #    f"""

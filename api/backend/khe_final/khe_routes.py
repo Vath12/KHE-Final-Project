@@ -101,3 +101,21 @@ def get_user_info(session_key):
     response = make_response(jsonify(result))
     response.status_code = 200
     return response
+
+@users.route('/classlist/<session_key>', methods=['GET'])
+def get_class_list(session_key):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+    if (user_id == -1):
+        response = make_response("")
+        response.status_code = 401 #incorrect credentials
+        return response
+    query = f'''
+        SELECT class_id,name FROM Classes WHERE class_id in (SELECT class_id FROM Memberships WHERE user_id = {user_id})
+    '''
+    success = cursor.execute(query)
+    result = cursor.fetchall()
+    response = make_response(jsonify(result))
+    response.status_code = 200
+    return response
