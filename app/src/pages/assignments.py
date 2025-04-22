@@ -11,7 +11,7 @@ with col_right:
     col_h1, col_h2 = st.columns(2)
     with col_h1:
         if st.button("Home"):
-            st.switch_page("Home.py")
+            st.switch_page("home.py")
     with col_h2:
         if st.button("Classes"):
             st.switch_page("pages/classes.py")
