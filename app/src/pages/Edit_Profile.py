@@ -29,7 +29,6 @@ def edit_profile_page():
 
     # Sidebar Navigation
     with st.sidebar:
-        st.image("assets/logo.png", width=150)
         if st.button("🏠 Home"):
             st.switch_page("home.py")
         if st.button("👤 Profile"):
@@ -48,7 +47,7 @@ def edit_profile_page():
             cols = st.columns(2)
             with cols[0]:
                 first_name = st.text_input(
-                    "First Name" + "<span class='required-asterisk'>*</span>",
+                    "First Name",
                     value=st.session_state.get('first_name', ''),
                     key="edit_first_name"
                 )
@@ -58,7 +57,7 @@ def edit_profile_page():
                     key="edit_last_name"
                 )
                 username = st.text_input(
-                    "Username" + "<span class='required-asterisk'>*</span>",
+                    "Username",
                     value=st.session_state.get('username', ''),
                     disabled=True,
                     help="Username cannot be changed"
@@ -66,7 +65,7 @@ def edit_profile_page():
                 
             with cols[1]:
                 email = st.text_input(
-                    "Email" + "<span class='required-asterisk'>*</span>",
+                    "Email",
                     value=st.session_state.get('email', ''),
                     key="edit_email"
                 )

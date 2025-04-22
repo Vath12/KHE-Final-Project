@@ -47,7 +47,6 @@ def profile_page():
 
     # Sidebar Navigation
     with st.sidebar:
-        st.image("assets/logo.png", width=150)
         if st.button("🏠 Home"):
             st.switch_page("home.py")
         if st.button("📚 Courses"):
@@ -65,7 +64,7 @@ def profile_page():
 
     with col1:
         st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-        st.image("assets/default-avatar.png", use_column_width=True, caption="Profile Picture", output_format="PNG")
+        st.image("assets/default-avatar.png", use_container_width=True, caption="Profile Picture", output_format="PNG")
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
