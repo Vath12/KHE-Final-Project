@@ -45,7 +45,7 @@ cols = st.columns(3)
 
 for i in range(6):  # 2 rows of 3 cards
     with cols[i % 3]:
-        if st.button("Class",key = 1888888+i):
+        if st.button("Class",key = 1888888+i,use_container_width=True):
             st.switch_page("pages/classes.py")
         #st.markdown(
         #    f"""
