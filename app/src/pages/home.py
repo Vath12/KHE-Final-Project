@@ -1,24 +1,12 @@
 import streamlit as st
-import requests
-import os
-
-print(st.session_state.get("session_key"))
-if (st.session_state.get("session_key")==None):
-    st.switch_page("Login.py")
-result = requests.get(f"http://api:4000/userinfo/{st.session_state.get('session_key')}")
-if (result.status_code != 200):
-    st.switch_page("Login.py")
-else:
-    userInfo = result.json()[0] #the query returns an array with one dictionary
-
-result = requests.get(f"http://api:4000/classlist/{st.session_state.get('session_key')}")
-classes = result.json()
 
 st.set_page_config(page_title="homepage", layout="wide")
 
+# ---------- Session State Initialization ----------
+if 'role' not in st.session_state:
+    st.session_state.role = 'ta' # student for student view, ta for TA view
 
-
-# ---------- Sidebar ----------
+# ---------- Sidebar ---------- 
 st.sidebar.markdown(
     """
     <style>
@@ -36,48 +24,91 @@ st.sidebar.markdown(
         .sidebar-link:hover {
             color: #1b4f72;
         }
+        .ta-section {
+            border-top: 2px solid #2e86de;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-st.sidebar.markdown("<div class='sidebar-title'>GradeBook</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Courses</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Instructors</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-title'>📘 GradeBook</div>", unsafe_allow_html=True)
+
+# TA-specific sidebar options
+if st.session_state.role == 'ta':
+    st.sidebar.markdown("<div class='ta-section'>", unsafe_allow_html=True)
+    st.sidebar.markdown("### TA Controls")
+    if st.sidebar.button("➕ Create New Class", use_container_width=True):
+        st.switch_page("pages/add_class.py")
+    st.sidebar.markdown("</div>", unsafe_allow_html=True)
+
+# General sidebar links
+st.sidebar.markdown("<div class='sidebar-link'>🔔 Notifications</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>📚 Courses</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>👨‍🏫 Instructors</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>🙍 Profile</div>", unsafe_allow_html=True)
 
 # ---------- Page Title ----------
 st.markdown(
-    f"""
-    <div style='font-size: 40px; font-weight: bold; color: #2e86de;'>
-        Welcome {userInfo['first_name']} {userInfo['last_name']}
+    """
+    <h1 style='color: #2e86de;'>Welcome to Your Dashboard</h1>
     <p style='font-size: 18px; color: #555;'>Click on course to view details</p>
     """,
     unsafe_allow_html=True
 )
 
-# ---------- Class Cards Layout ----------
+# ---------- Class Cards Layout ---------- 
 cols = st.columns(3)
 
-for i in range(len(classes)):  # 2 rows of 3 cards
+for i in range(6):  # 2 rows of 3 cards
     with cols[i % 3]:
-        if st.button(classes[i]["name"],key = 1888888+i,use_container_width=True):
-            st.switch_page("pages/classes.py")
-        #st.markdown(
-        #    f"""
-        #    <div style='
-        #        background-color: #e8f0fe;
-        #        border-radius: 12px;
-        #        padding: 20px;
-        #        margin: 15px 0;
-        #        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-        #        transition: 0.3s;
-        #        cursor: pointer;
-        #    'onmouseover="this.style.backgroundColor='#d0e3fd'" onmouseout="this.style.backgroundColor='#e8f0fe'">
-        #        <h4 style='margin: 0; color: #1b4f72;'>Class Name</h4>
-        #        <p style='margin: 5px 0 0; color: #34495e;'>Instructor Name</p>
-        #    </div>
-        #    """,
-        #    unsafe_allow_html=True
-        #)
+        # Class Card Container
+        with st.container(border=True):
+            # Main class card content
+            st.markdown(
+                f"""
+                <div style='
+                    padding: 15px;
+                    margin: 10px 0;
+                    border-radius: 10px;
+                    background-color: {'#f8f9fa' if i%2 else '#e8f0fe'};
+                    transition: 0.3s;
+                    cursor: pointer;
+                '>
+                    <h4 style='margin: 0; color: #1b4f72;'>Class {i+1}</h4>
+                    <p style='margin: 5px 0 0; color: #34495e;'>Instructor Name</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # TA-specific management buttons
+            if st.session_state.role == 'ta':
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    if st.button("View Class", key=f"view_{i}", use_container_width=True):
+                        st.switch_page("pages/classes.py")
+                with col2:
+                    if st.button("⚙️", key=f"manage_{i}", help="Manage Class Settings"):
+                        st.switch_page("pages/manage_class.py")
+
+# Add Class Floating Button (TA only)
+if st.session_state.role == 'ta':
+    st.markdown(
+        """
+        <style>
+            .floating-button {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                z-index: 999;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    if st.button("➕ Create New Class", key="float_add"):
+        st.switch_page("pages/add_class.py")
