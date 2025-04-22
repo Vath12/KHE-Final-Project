@@ -51,8 +51,9 @@ def try_login(username,password):
     # The cursor will return the data as a Python Dictionary
     user = cursor.fetchall()
     if (len(user) != 1):
+        response = make_response("")
         response.status_code = 401 #incorrect credentials
-        return ""
+        return response
     user = user[0]["user_id"]
     log(f"user: {user}\n")
     query = f'''
