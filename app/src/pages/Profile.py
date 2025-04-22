@@ -1,6 +1,5 @@
-import streamlit as st
 import logging
-from modules.nav import SideBarLinks
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,17 @@ def profile_page():
     </style>
     """, unsafe_allow_html=True)
 
-    SideBarLinks(show_home=False)
+    with st.sidebar:
+        st.image("assets/logo.png", width=150)
+        if st.session_state.get('authenticated'):
+            if st.button("Profile"):
+                st.switch_page("pages/Profile.py")
+            if st.button("Home"):
+                st.switch_page("Home.py")
+            if st.button("Logout"):
+                st.session_state.clear()
+                st.switch_page("Home.py")
+
     st.title("User Profile")
 
     col1, col2 = st.columns([1, 3], gap="large")
