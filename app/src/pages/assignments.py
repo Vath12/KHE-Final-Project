@@ -3,67 +3,104 @@ import streamlit as st
 # Page setup
 st.set_page_config(layout="wide", page_title="Assignments")
 
-# Header
-st.markdown("<h1 style='color: #7F27FF;'>Assignments</h1>", unsafe_allow_html=True)
-
-# Home button
-st.markdown(
-    "<div style='text-align: right;'>"
-    "<a href='Home.py'>"
-    "<button style='padding: 0.5rem 1rem; font-size: 1rem; background-color: #9C4DFF; color: white; border: none; border-radius: 6px; cursor: pointer;'>🏠 Home</button>"
-    "</a>"
-    "</div>",
-    unsafe_allow_html=True
-)
+# ---------- Navigation ----------
+col_left, col_right = st.columns([6, 2])
+with col_left:
+    st.title("Assignments")
+with col_right:
+    col_h1, col_h2 = st.columns(2)
+    with col_h1:
+        if st.button("Home"):
+            st.switch_page("Home.py")
+    with col_h2:
+        if st.button("Classes"):
+            st.switch_page("pages/classes.py")
 
 st.markdown("---")
 
-# Due Dates Section
-st.markdown("##Due Dates")
-with st.expander("View assignment due dates"):
-    st.dataframe({
-        "Assignment": [],
-        "Due Date": []
-    })
+# ---------- Assignment Storage ----------
+if "assignments" not in st.session_state:
+    st.session_state.assignments = []
 
-# Grading Rubric Section
-st.markdown("## Grading Rubric")
-with st.expander("View grading criteria"):
-    st.dataframe({
-        "Assignment": [],
-        "Points Possible": [],
-        "Weight (%)": []
-    })
+# ---------- View Toggle ----------
+view_mode = st.radio("View as:", ["Student", "TA"], horizontal=True)
 
-# Grade Input Section
-st.markdown("## Final Grade Calculator")
+# ---------- Student View ----------
+if view_mode == "Student":
+    st.subheader("Assignment List")
+    if st.session_state.assignments:
+        st.table([{
+            "Assignment": a["name"],
+            "Description": a["description"] if "description" in a else "No description",
+            "Due Date": a["due_date"],
+            "Score (%)": a["score"] if "score" in a else "Not Graded",
+            "Weight (%)": a["weight"]
+        } for a in st.session_state.assignments])
+    else:
+        st.info("No assignments available yet.")
 
-with st.form("grade_calculator"):
-    st.markdown("### Enter assignment grades:")
-
-    num_assignments = st.number_input("Number of Assignments", min_value=1, max_value=20, value=3)
-    assignment_scores = []
-    total_weight = 0
-
-    for i in range(int(num_assignments)):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            name = st.text_input(f"Assignment {i+1} Name", key=f"name_{i}")
-        with col2:
-            score = st.number_input(f"Score (%) for {name or f'Assignment {i+1}'}", min_value=0.0, max_value=100.0, key=f"score_{i}")
-        with col3:
-            weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, key=f"weight_{i}")
-
-        assignment_scores.append((score, weight))
-        total_weight += weight
-
-    submitted = st.form_submit_button("Calculate Final Grade")
-
-    if submitted:
-        if total_weight != 100:
-            st.error("Total weight must equal 100%.")
-        else:
-            final_grade = sum(score * (weight / 100) for score, weight in assignment_scores)
+    # Final grade calculation
+    if st.session_state.assignments:
+        total_weight = sum(a["weight"] for a in st.session_state.assignments)
+        if total_weight == 100:
+            final_grade = sum(a["score"] * (a["weight"] / 100) for a in st.session_state.assignments if "score" in a)
             st.success(f"Final Grade: {final_grade:.2f}%")
+        else:
+            st.warning(f"Total weight is {total_weight}%. Final grade requires exactly 100%.")
 
-st.markdown("---")
+# ---------- TA View ----------
+else:
+    with st.expander("Create Assignment (TA Access – currently open to everyone)"):
+        with st.form("create_assignment_form"):
+            name = st.text_input("Assignment Name")
+            description = st.text_area("Assignment Description")
+            due_date = st.date_input("Due Date")
+            score = st.number_input("Score (%)", min_value=0.0, max_value=100.0)
+            weight = st.number_input("Weight (%)", min_value=0.0, max_value=100.0)
+            submit = st.form_submit_button("Add Assignment")
+
+            if submit and name:
+                st.session_state.assignments.append({
+                    "name": name,
+                    "description": description,
+                    "due_date": due_date,
+                    "score": score,
+                    "weight": weight
+                })
+                st.success(f"Assignment '{name}' added.")
+
+    st.subheader("Your Assignments")
+    if st.session_state.assignments:
+        st.table([{
+            "Assignment": a["name"],
+            "Description": a["description"],
+            "Due Date": a["due_date"],
+            "Score (%)": a["score"] if "score" in a else "Not Graded",
+            "Weight (%)": a["weight"]
+        } for a in st.session_state.assignments])
+    else:
+        st.info("No assignments added yet.")
+
+    # Grading Existing Assignments
+    st.subheader("Grade Student Assignments")
+    student_name = st.text_input("Enter Student Name for Grading")
+    assignment_to_grade = st.selectbox("Select Assignment to Grade", 
+                                      [a["name"] for a in st.session_state.assignments])
+    student_score = st.number_input("Enter Score (%)", min_value=0, max_value=100)
+
+    grade_button = st.button("Grade Assignment")
+
+    if grade_button:
+        # Check if the student assignment exists, and if so, update the grade
+        for assignment in st.session_state.assignments:
+            if assignment["name"] == assignment_to_grade:
+                assignment["score"] = student_score
+                st.success(f"Assigned grade of {student_score}% for {student_name} on {assignment_to_grade}")
+
+    if st.session_state.assignments:
+        total_weight = sum(a["weight"] for a in st.session_state.assignments)
+        if total_weight != 100:
+            st.warning(f"Total weight is {total_weight}%. Final grade requires exactly 100%.")
+        else:
+            final_grade = sum(a["score"] * (a["weight"] / 100) for a in st.session_state.assignments if "score" in a)
+            st.success(f"Final Grade: {final_grade:.2f}%")
