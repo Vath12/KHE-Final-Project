@@ -5,7 +5,7 @@ import os
 logger = logging.getLogger(__name__)
 
 import streamlit as st
-st.set_page_config(layout = 'wide')
+st.set_page_config(layout = 'wide', page_title="Login Page")
 st.sidebar.success("select page")
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:  
