@@ -10,14 +10,9 @@ with col_left:
     st.markdown("<h1 style='color: #7F27FF;'>Course: [Class Name]</h1>", unsafe_allow_html=True)
 
 with col_right:
-    st.markdown(
-        "<div style='text-align: right;'>"
-        "<button style='padding: 0.5rem 1rem; font-size: 1rem; background-color: #9C4DFF; color: white; border: none; border-radius: 6px; cursor: pointer;'>"
-        "Home"
-        "</button>"
-        "</div>",
-        unsafe_allow_html=True
-    )
+    if st.button("Home"):
+        st.switch_page("pages/home.py")
+    
 
 st.write("")
 
@@ -32,7 +27,7 @@ with col1:
         st.session_state.selected_section = "syllabus"
 with col2:
     if st.button("Assignments"):
-        st.session_state.selected_section = "assignments"
+        st.switch_page("pages/assignments.py")
 with col3:
     if st.button("Announcements"):
         st.session_state.selected_section = "announcements"
