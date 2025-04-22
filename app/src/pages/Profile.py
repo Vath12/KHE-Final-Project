@@ -36,7 +36,7 @@ def profile_page():
     """, unsafe_allow_html=True)
 
     SideBarLinks(show_home=False)
-    st.title("👤 User Profile")
+    st.title("User Profile")
 
     col1, col2 = st.columns([1, 3], gap="large")
 
