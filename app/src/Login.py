@@ -18,7 +18,7 @@ with col2:
     if st.button("Login"):
         result = requests.get(f'http://api:4000/trylogin/{st.session_state["input_username"]}/{hash(st.session_state["input_password"])}')
         if (result.status_code == 200):
-            st.session_state["session_key"] = result.content
+            st.session_state["session_key"] = int(result.content)
             st.switch_page("pages/home.py")
         else:
             st.markdown("<p style='text-align: center; color: Red;'>incorrect username or password</p>", unsafe_allow_html=True)

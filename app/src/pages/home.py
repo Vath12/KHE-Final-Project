@@ -1,5 +1,15 @@
 import streamlit as st
+import requests
+import os
 
+print(st.session_state.get("session_key"))
+if (st.session_state.get("session_key")==None):
+    st.switch_page("Login.py")
+result = requests.get(f"http://api:4000/userinfo/{st.session_state.get('session_key')}")
+if (result.status_code != 200):
+    st.switch_page("Login.py")
+else:
+    userInfo = result.json()[0] #the query returns an array with one dictionary
 st.set_page_config(page_title="homepage", layout="wide")
 
 # ---------- Sidebar ----------
@@ -25,16 +35,17 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.markdown("<div class='sidebar-title'>📘 GradeBook</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>🔔 Notifications</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>📚 Courses</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>👨‍🏫 Instructors</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>🙍 Profile</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-title'>GradeBook</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Courses</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Instructors</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
 
 # ---------- Page Title ----------
 st.markdown(
-    """
-    <h1 style='color: #2e86de;'>Welcome to Your Dashboard</h1>
+    f"""
+    <div style='font-size: 40px; font-weight: bold; color: #2e86de;'>
+        Welcome {userInfo['first_name']} {userInfo['last_name']}
     <p style='font-size: 18px; color: #555;'>Click on course to view details</p>
     """,
     unsafe_allow_html=True
