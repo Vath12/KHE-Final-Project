@@ -1,15 +1,17 @@
-import logging
 import streamlit as st
+import logging
 
 logger = logging.getLogger(__name__)
 
 def profile_page():
-    st.set_page_config(layout='wide')
+    st.set_page_config(page_title="User Profile", layout="wide")
     
-    if not st.session_state.get('authenticated'):
-        st.warning("Please log in to view your profile")
-        st.stop()
+    # # Authentication check
+    # if not st.session_state.get('authenticated'):
+    #     st.warning("Please log in to view your profile")
+    #     st.stop()
     
+    # Custom CSS styling
     st.markdown("""
     <style>
         .profile-card {
@@ -30,37 +32,47 @@ def profile_page():
         }
         .info-value {
             margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        .avatar-img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
         }
     </style>
     """, unsafe_allow_html=True)
 
+    # Sidebar Navigation
     with st.sidebar:
         st.image("assets/logo.png", width=150)
-        if st.session_state.get('authenticated'):
-            if st.button("Profile"):
-                st.switch_page("pages/Profile.py")
-            if st.button("Home"):
-                st.switch_page("Home.py")
-            if st.button("Logout"):
-                st.session_state.clear()
-                st.switch_page("Home.py")
+        if st.button("🏠 Home"):
+            st.switch_page("home.py")
+        if st.button("📚 Courses"):
+            st.switch_page("pages/classes.py")
+        if st.button("✏️ Edit Profile"):
+            st.switch_page("pages/Edit_Profile.py")
+        if st.button("🚪 Logout"):
+            st.session_state.clear()
+            st.switch_page("home.py")
 
-    st.title("User Profile")
-
-    col1, col2 = st.columns([1, 3], gap="large")
+    # Main Content
+    st.title("👤 User Profile")
+    
+    col1, col2 = st.columns([1, 2], gap="large")
 
     with col1:
         st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-        st.image("assets/default-avatar.png", use_column_width=True, caption="Profile Picture")
+        st.image("assets/default-avatar.png", use_column_width=True, caption="Profile Picture", output_format="PNG")
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
         st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-        
-        # Profile Header
         st.header(f"{st.session_state.get('first_name', 'User')}'s Profile")
         st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-        
+
         # User Information
         cols = st.columns(2)
         with cols[0]:
@@ -77,27 +89,17 @@ def profile_page():
             st.markdown("<div class='info-label'>Email</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='info-value'>{st.session_state.get('email', '')}</div>", unsafe_allow_html=True)
             
-            st.markdown("<div class='info-label'>Password</div>", unsafe_allow_html=True)
-            st.markdown("<div class='info-value'>••••••••</div>", unsafe_allow_html=True)
-            
             st.markdown("<div class='info-label'>Role</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{st.session_state.get('role', '').replace('_', ' ').title()}</div>", unsafe_allow_html=True)
+            role_display = st.session_state.get('role', 'student').replace('_', ' ').title()
+            st.markdown(f"<div class='info-value'>{role_display}</div>", unsafe_allow_html=True)
+            
+            st.markdown("<div class='info-label'>Member Since</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='info-value'>{st.session_state.get('join_date', '2024-01-01')}</div>", unsafe_allow_html=True)
 
         # Bio Section
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
         st.markdown("<div class='info-label'>Bio</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='info-value'>{st.session_state.get('bio', 'No bio provided')}</div>", unsafe_allow_html=True)
-        
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-        
-        # Action Buttons
-        edit_col, logout_col = st.columns([1, 1])
-        with edit_col:
-            if st.button("Edit Profile", use_container_width=True):
-                st.switch_page('pages/Edit_Profile.py')
-        with logout_col:
-            if st.button("Log Out", use_container_width=True):
-                st.session_state.clear()
-                st.switch_page('Home.py')
         
         st.markdown("</div>", unsafe_allow_html=True)
 
