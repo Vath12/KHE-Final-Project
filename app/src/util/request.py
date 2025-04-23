@@ -52,7 +52,7 @@ def getAssignments(class_id : int) -> list[dict]:
     :return:
     [{assignment_id,due_date,name,overall_weight}]
     """
-    result = requests.get(f"http://api:4000/assignments/{st.session_state.get('session_key')}")
+    result = requests.get(f"http://api:4000/assignments/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
 def getAssignmentDetails(class_id : int,assignment_id : int) -> list[dict]:
