@@ -47,13 +47,13 @@ def profile_page():
 
     # Sidebar Navigation
     with st.sidebar:
-        if st.button("🏠 Home"):
+        if st.button("Home"):
             st.switch_page("home.py")
-        if st.button("📚 Courses"):
+        if st.button("Courses"):
             st.switch_page("pages/classes.py")
-        if st.button("✏️ Edit Profile"):
+        if st.button("Edit Profile"):
             st.switch_page("pages/Edit_Profile.py")
-        if st.button("🚪 Logout"):
+        if st.button("Logout"):
             st.session_state.clear()
             st.switch_page("home.py")
 

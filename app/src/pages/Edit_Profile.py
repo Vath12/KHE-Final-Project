@@ -29,11 +29,11 @@ def edit_profile_page():
 
     # Sidebar Navigation
     with st.sidebar:
-        if st.button("🏠 Home"):
+        if st.button("Home"):
             st.switch_page("home.py")
-        if st.button("👤 Profile"):
+        if st.button("Profile"):
             st.switch_page("pages/Profile.py")
-        if st.button("🚪 Logout"):
+        if st.button("Logout"):
             st.session_state.clear()
             st.switch_page("home.py")
 
@@ -94,12 +94,12 @@ def edit_profile_page():
             col1, col2 = st.columns([1, 2])
             with col1:
                 submitted = st.form_submit_button(
-                    "💾 Save Changes",
+                    "Save Changes",
                     use_container_width=True,
                     type="primary"
                 )
             with col2:
-                if st.form_submit_button("❌ Cancel", use_container_width=True):
+                if st.form_submit_button("Cancel", use_container_width=True):
                     st.switch_page("pages/Profile.py")
 
         # Handle form submission
