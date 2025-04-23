@@ -48,14 +48,14 @@ def profile_page():
     # Sidebar Navigation
     with st.sidebar:
         if st.button("Home"):
-            st.switch_page("home.py")
+            st.switch_page("pages/home.py")
         if st.button("Courses"):
             st.switch_page("pages/classes.py")
         if st.button("Edit Profile"):
-            st.switch_page("pages/Edit_Profile.py")
+            st.switch_page("pages/edit_profile.py")
         if st.button("Logout"):
             st.session_state.clear()
-            st.switch_page("home.py")
+            st.switch_page("pages/home.py")
 
     # Main Content
     st.title("User Profile")
