@@ -39,6 +39,8 @@ if st.sidebar.button("Profile"):
     st.switch_page("pages/profile.py")
 if st.sidebar.button("Notifications"):
     st.switch_page("pages/notification.py")
+if st.sidebar.button("Manage Classes"):
+    st.switch_page("pages/manage_classes.py")
 #st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
 #st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
 
