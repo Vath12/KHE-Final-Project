@@ -1,5 +1,5 @@
 import streamlit as st
-from request import safeRequest
+from util.request import safeRequest
 import requests
 
 def isValidSession():

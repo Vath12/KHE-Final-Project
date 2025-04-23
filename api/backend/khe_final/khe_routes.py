@@ -5,6 +5,7 @@ from flask import make_response
 from flask import current_app
 from backend.db_connection import db as database
 import os
+import random
 
 CODE_SUCCESS = 200
 CODE_ACCESS_DENIED = 401
@@ -17,6 +18,17 @@ def respond(content,code):
 
 # Create a new Blueprint object, which is a collection of routes.
 users = Blueprint('users', __name__)
+
+@users.route('/debug')
+def debug():
+    cursor = database.get_db().cursor()
+
+    query = f'''
+        SELECT * FROM LoginSessions
+    '''
+    success = cursor.execute(query)
+    result = cursor.fetchall()
+    return respond(jsonify(result),CODE_SUCCESS)
 
 def log(message):
     os.write(1,bytes(message+"\n","utf-8"))
@@ -59,9 +71,10 @@ def try_login(username,password):
     query = '''
         SELECT user_id
         FROM Users
-        WHERE username = '%s' AND password = 0x%s 
+        WHERE username = %s AND password = %s
     ''' #this is probably bad but works for our purposes
-    cursor.execute(query,(username,password))
+
+    cursor.execute(query,(username,bytes.fromhex(password)))
     # The cursor will return the data as a Python Dictionary
     user = cursor.fetchall()
     if (len(user) != 1):
@@ -238,13 +251,56 @@ def getGrade(session_key,class_id,assignment_id):
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
-@users.route('/debug')
-def debug():
+values = list("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890")
+def intToJoinCode(number):
+    code = ""
+    for i in range(8):
+        number,remainder = divmod(number,62)
+        code+=values[remainder]
+    return code
+
+
+#Creation Queries
+@users.route("/createClass/<session_key>/<class_name>/<class_description>/<organization>")
+def createClass(session_key,class_name,class_description,organization):
     cursor = database.get_db().cursor()
 
-    query = f'''
-        SELECT * FROM LoginSessions
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    while (True):
+        #8 characters, only latin letters and numbers 0-9
+        join_code = intToJoinCode(random.randint(0,62**8))
+
+        query = '''
+        SELECT class_id FROM Classes WHERE join_code = %s
+        '''
+        cursor.execute(query,(join_code))
+        if (len(cursor.fetchall()) == 0):
+            break
+    
+    query = '''
+        INSERT INTO Classes (name,description,organization,join_code) VALUES
+        (%s,%s,%s,%s);
     '''
-    success = cursor.execute(query)
-    result = cursor.fetchall()
-    return respond(jsonify(result),CODE_SUCCESS)
+
+    cursor.execute(query,(class_name,class_description,organization,join_code))
+
+    cursor.execute('SELECT LAST_INSERT_ID()')
+    class_id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
+
+    query = '''
+        INSERT INTO Memberships (user_id,class_id,permission_level,visibility) VALUES
+        (%s,%s,%s,%s)
+    '''
+
+    cursor.execute(query,(user_id,class_id,16,1))
+
+    database.get_db().commit()
+
+    return respond("",200)
+
+
+
