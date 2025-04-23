@@ -11,6 +11,19 @@ CODE_SUCCESS = 200
 CODE_ACCESS_DENIED = 401
 CODE_INVALID_FORMAT = 403
 
+FLAG_CAN_VIEW_ROSTER = 0
+FLAG_CAN_MANAGE_ASSIGNMENTS = 1
+FLAG_CAN_GRADE_ASSIGNMENT = 2
+FLAG_CAN_REMOVE_STUDENT = 4
+FLAG_CAN_EDIT_COURSE = 5
+FLAG_IS_INSTRUCTOR = 6
+FLAG_CAN_VIEW_HIDDEN = 7
+
+def getFlag(flags,index):
+    return (flags >> index) & 0b1
+def setFlag(flags,index,value):
+    return (flags & ~(0b00000000 | 0b1 << index)) | (0b1 if (value) else 0b0 << index)
+
 def respond(content,code):
     response = make_response(content)
     response.status_code = code
@@ -40,7 +53,6 @@ def userIDFromSessionKey(session_key):
     '''
     success = cursor.execute(query)
     result = cursor.fetchall()
-    log(f"sessions {result}")
     query = '''
         SELECT user_id FROM LoginSessions WHERE session_key = %s
     '''
@@ -80,20 +92,17 @@ def try_login(username,password):
     if (len(user) != 1):
         return respond("",CODE_ACCESS_DENIED)
     user = user[0]["user_id"]
-    log(f"user: {user}\n")
     query = '''
         SELECT user_id,session_key,expiration_time FROM LoginSessions WHERE user_id=%s
     '''
     cursor.execute(query,(user))
     session_key = cursor.fetchall()
-    log(f"session_key {str(session_key)}")
     if (len(session_key) == 0):
         query = '''
             INSERT INTO LoginSessions (user_id,expiration_time) VALUES
             (%s, ADDTIME(CURRENT_TIMESTAMP, '23:59:59'))
         '''
         result=cursor.execute(query,(user))
-        log(f"insertion result: {result}")
 
     query = '''
         SELECT session_key FROM LoginSessions WHERE user_id=%s
@@ -259,7 +268,6 @@ def intToJoinCode(number):
         code+=values[remainder]
     return code
 
-
 #Creation Queries
 @users.route("/createClass/<session_key>/<class_name>/<class_description>/<organization>")
 def createClass(session_key,class_name,class_description,organization):
@@ -300,7 +308,7 @@ def createClass(session_key,class_name,class_description,organization):
 
     database.get_db().commit()
 
-    return respond("",200)
+    return respond(str(class_id),200)
 
 
 
