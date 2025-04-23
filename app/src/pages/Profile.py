@@ -1,16 +1,28 @@
 import streamlit as st
 import logging
+from .util.verification import isValidSession
+from .util.request import *
 
 logger = logging.getLogger(__name__)
 
 def profile_page():
     st.set_page_config(page_title="User Profile", layout="wide")
     
-    # # Authentication check
-    # if not st.session_state.get('authenticated'):
-    #     st.warning("Please log in to view your profile")
-    #     st.stop()
+    # Authentication check
+    try:
+        isValidSession()
+    except Exception as e:
+        st.error("Session validation failed")
+        st.stop()
     
+    # Get user data from API
+    try:
+        user_info = getUserInfo()
+    except Exception as e:
+        st.error("Failed to load user information")
+        logger.error(f"API error: {str(e)}")
+        st.stop()
+
     # Custom CSS styling
     st.markdown("""
     <style>
@@ -34,14 +46,6 @@ def profile_page():
             margin-bottom: 1rem;
             font-size: 1.1rem;
         }
-        .avatar-img {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin: 0 auto;
-            display: block;
-        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -58,7 +62,7 @@ def profile_page():
             st.switch_page("home.py")
 
     # Main Content
-    st.title("👤 User Profile")
+    st.title("User Profile")
     
     col1, col2 = st.columns([1, 2], gap="large")
 
@@ -69,36 +73,36 @@ def profile_page():
 
     with col2:
         st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-        st.header(f"{st.session_state.get('first_name', 'User')}'s Profile")
+        st.header(f"{user_info['first_name']}'s Profile")
         st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
         # User Information
         cols = st.columns(2)
         with cols[0]:
             st.markdown("<div class='info-label'>First Name</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{st.session_state.get('first_name', '')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='info-value'>{user_info['first_name']}</div>", unsafe_allow_html=True)
             
             st.markdown("<div class='info-label'>Last Name</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{st.session_state.get('last_name', '')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='info-value'>{user_info['last_name']}</div>", unsafe_allow_html=True)
             
             st.markdown("<div class='info-label'>Username</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{st.session_state.get('username', '')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='info-value'>{user_info['username']}</div>", unsafe_allow_html=True)
 
         with cols[1]:
             st.markdown("<div class='info-label'>Email</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{st.session_state.get('email', '')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='info-value'>{user_info['email']}</div>", unsafe_allow_html=True)
             
             st.markdown("<div class='info-label'>Role</div>", unsafe_allow_html=True)
-            role_display = st.session_state.get('role', 'student').replace('_', ' ').title()
+            role_display = user_info.get('role', 'student').replace('_', ' ').title()
             st.markdown(f"<div class='info-value'>{role_display}</div>", unsafe_allow_html=True)
             
             st.markdown("<div class='info-label'>Member Since</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{st.session_state.get('join_date', '2024-01-01')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='info-value'>{user_info.get('join_date', '2024-01-01')}</div>", unsafe_allow_html=True)
 
         # Bio Section
         st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
         st.markdown("<div class='info-label'>Bio</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='info-value'>{st.session_state.get('bio', 'No bio provided')}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-value'>{user_info.get('bio', 'No bio provided')}</div>", unsafe_allow_html=True)
         
         st.markdown("</div>", unsafe_allow_html=True)
 

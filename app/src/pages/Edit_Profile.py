@@ -1,15 +1,28 @@
 import streamlit as st
 import logging
+import requests
+from .util.verification import isValidSession
+from .util.request import *
 
 logger = logging.getLogger(__name__)
 
 def edit_profile_page():
     st.set_page_config(page_title="Edit Profile", layout="centered")
     
-    # # Authentication check
-    # if not st.session_state.get('authenticated'):
-    #     st.warning("Please log in to edit your profile")
-    #     st.stop()
+    # Authentication check
+    try:
+        isValidSession()
+    except Exception as e:
+        st.error("Session validation failed")
+        st.stop()
+
+    # Get current user data
+    try:
+        user_info = getUserInfo()
+    except Exception as e:
+        st.error("Failed to load user information")
+        logger.error(f"API error: {str(e)}")
+        st.stop()
 
     # Custom CSS styling
     st.markdown("""
@@ -38,7 +51,7 @@ def edit_profile_page():
             st.switch_page("home.py")
 
     # Main Content
-    st.title("✏️ Edit Profile")
+    st.title("Edit Profile")
     
     with st.form(key="edit_profile_form", clear_on_submit=True):
         with st.container(border=True):
@@ -48,17 +61,17 @@ def edit_profile_page():
             with cols[0]:
                 first_name = st.text_input(
                     "First Name",
-                    value=st.session_state.get('first_name', ''),
+                    value=user_info['first_name'],
                     key="edit_first_name"
                 )
                 last_name = st.text_input(
                     "Last Name",
-                    value=st.session_state.get('last_name', ''),
+                    value=user_info['last_name'],
                     key="edit_last_name"
                 )
                 username = st.text_input(
                     "Username",
-                    value=st.session_state.get('username', ''),
+                    value=user_info['username'],
                     disabled=True,
                     help="Username cannot be changed"
                 )
@@ -66,7 +79,7 @@ def edit_profile_page():
             with cols[1]:
                 email = st.text_input(
                     "Email",
-                    value=st.session_state.get('email', ''),
+                    value=user_info['email'],
                     key="edit_email"
                 )
                 new_password = st.text_input(
@@ -83,7 +96,7 @@ def edit_profile_page():
             
             bio = st.text_area(
                 "Bio",
-                value=st.session_state.get('bio', ''),
+                value=user_info.get('bio', ''),
                 height=100,
                 key="edit_bio"
             )
@@ -112,20 +125,32 @@ def edit_profile_page():
                 st.error("Passwords do not match!")
                 st.stop()
                 
-            # Update session state
-            updates = {
-                'first_name': first_name,
-                'last_name': last_name,
-                'email': email,
-                'bio': bio
-            }
-            
-            if new_password:
-                updates['password'] = new_password
+            # Update user data via API
+            try:
+                update_data = {
+                    "session_key": st.session_state.session_key,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "email": email,
+                    "bio": bio
+                }
+                if new_password:
+                    update_data["password"] = new_password
                 
-            st.session_state.update(updates)
-            st.success("Profile updated successfully!")
-            st.switch_page("pages/Profile.py")
+                response = requests.post(
+                    "http://api:4000/updateUser",
+                    json=update_data
+                )
+                
+                if response.status_code != 200:
+                    raise Exception(response.json().get('error', 'Update failed'))
+                
+                st.success("Profile updated successfully!")
+                st.switch_page("pages/Profile.py")
+                
+            except Exception as e:
+                st.error(f"Update failed: {str(e)}")
+                logger.error(f"Update error: {str(e)}")
 
 if __name__ == "__main__":
     edit_profile_page()
