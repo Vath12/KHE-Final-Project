@@ -1,8 +1,8 @@
 import streamlit as st
 import logging
 import requests
-from .util.verification import isValidSession
-from .util.request import *
+from util.verification import isValidSession
+from util.request import *
 
 logger = logging.getLogger(__name__)
 
