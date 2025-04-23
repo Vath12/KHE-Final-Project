@@ -7,6 +7,11 @@ from backend.db_connection import db as database
 import os
 
 
+def respond(content,code):
+    response = make_response(content)
+    response.status_code = code
+    return response
+
 # Create a new Blueprint object, which is a collection of routes.
 users = Blueprint('users', __name__)
 
@@ -75,12 +80,11 @@ def try_login(username,password):
     '''
     cursor.execute(query)
     session_key = cursor.fetchall()
-    response = make_response(str(session_key[0]["session_key"]))
-    # set the proper HTTP Status code of 200 (meaning all good)
-    response.status_code = 200
 
     database.get_db().commit()
-    return response
+
+    return respond(str(session_key[0]["session_key"]),200)
+    
 
 #trylogin/hamburger/5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8
 
@@ -98,9 +102,12 @@ def get_user_info(session_key):
     '''
     success = cursor.execute(query)
     result = cursor.fetchall()
-    response = make_response(jsonify(result))
-    response.status_code = 200
-    return response
+    return respond(jsonify(result),200)
+
+
+@users.route('/isValidSession/<session_key>', methods=['GET'])
+def get_valid_session(session_key):
+    return respond("",200 if (userIDFromSessionKey(session_key) != -1) else 401)
 
 @users.route('/classlist/<session_key>', methods=['GET'])
 def get_class_list(session_key):
@@ -108,14 +115,27 @@ def get_class_list(session_key):
 
     user_id = userIDFromSessionKey(session_key)
     if (user_id == -1):
-        response = make_response("")
-        response.status_code = 401 #incorrect credentials
-        return response
+        return make_response("",status_code=401)
     query = f'''
         SELECT class_id,name FROM Classes WHERE class_id in (SELECT class_id FROM Memberships WHERE user_id = {user_id})
     '''
     success = cursor.execute(query)
     result = cursor.fetchall()
-    response = make_response(jsonify(result))
-    response.status_code = 200
-    return response
+    return respond(jsonify(result),200)
+
+@users.route('/classinfo/<session_key>/<class_id>')
+def getClassInfo(session_key,class_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",401)
+    query = f'''
+        SELECT class_id,name,description,organization FROM Classes WHERE 
+        class_id = {class_id} AND class_id in 
+        (SELECT class_id FROM Memberships WHERE user_id = {user_id})
+    '''
+    success = cursor.execute(query)
+    result = cursor.fetchall()
+    return respond(jsonify(result),200)

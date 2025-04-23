@@ -1,18 +1,14 @@
 import streamlit as st
 import requests
 import os
+from util.verification import isValidSession
+from util.request import *
 
-print(st.session_state.get("session_key"))
-if (st.session_state.get("session_key")==None):
-    st.switch_page("Login.py")
-result = requests.get(f"http://api:4000/userinfo/{st.session_state.get('session_key')}")
-if (result.status_code != 200):
-    st.switch_page("Login.py")
-else:
-    userInfo = result.json()[0] #the query returns an array with one dictionary
+isValidSession()
 
-result = requests.get(f"http://api:4000/classlist/{st.session_state.get('session_key')}")
-classes = result.json()
+userInfo = getUserInfo()
+classes = getClassList()
+
 
 st.set_page_config(page_title="homepage", layout="wide")
 
