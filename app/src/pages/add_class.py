@@ -42,20 +42,20 @@ def add_class_page():
             col1, col2 = st.columns(2)
             with col1:
                 class_name = st.text_input(
-                    "Class Name" + "<span class='required-asterisk'>*</span>",
+                    "Class Name",
                     help="Enter the official course name",
                     key="class_name"
                 )
                 
                 class_code = st.text_input(
-                    "Class Code" + "<span class='required-asterisk'>*</span>",
+                    "Class Code",
                     help="Unique course code (e.g. CS-101)",
                     key="class_code"
                 )
                 
             with col2:
                 section_number = st.number_input(
-                    "Section Number" + "<span class='required-asterisk'>*</span>",
+                    "Section Number",
                     min_value=1,
                     max_value=50,
                     value=1,
@@ -63,7 +63,7 @@ def add_class_page():
                 )
                 
                 schedule = st.multiselect(
-                    "Class Days" + "<span class='required-asterisk'>*</span>",
+                    "Class Days",
                     options=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
                     default=["Monday", "Wednesday"],
                     key="days"
@@ -74,13 +74,13 @@ def add_class_page():
             start_time, end_time = st.columns(2)
             with start_time:
                 class_start = st.time_input(
-                    "Start Time" + "<span class='required-asterisk'>*</span>",
+                    "Start Time",
                     value=time(9, 0),
                     key="start_time"
                 )
             with end_time:
                 class_end = st.time_input(
-                    "End Time" + "<span class='required-asterisk'>*</span>",
+                    "End Time",
                     value=time(10, 30),
                     key="end_time"
                 )
