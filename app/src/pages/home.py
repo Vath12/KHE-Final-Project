@@ -1,6 +1,4 @@
 import streamlit as st
-import requests
-import os
 from util.verification import isValidSession
 from util.request import *
 
@@ -37,11 +35,13 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.markdown("<div class='sidebar-title'>GradeBook</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Courses</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>Instructors</div>", unsafe_allow_html=True)
+if st.sidebar.button("Profile"):
+    st.switch_page("pages/profile.py")
+#st.sidebar.markdown("<div class='sidebar-title'>GradeBook</div>", unsafe_allow_html=True)
+#st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
+#st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
+#st.sidebar.markdown("<div class='sidebar-link'>Courses</div>", unsafe_allow_html=True)
+#st.sidebar.markdown("<div class='sidebar-link'>Instructors</div>", unsafe_allow_html=True)
 
 # ---------- Page Title ----------
 st.markdown(

@@ -1,9 +1,6 @@
 import streamlit as st
-import logging
-from .util.verification import isValidSession
-from .util.request import *
-
-logger = logging.getLogger(__name__)
+from util.verification import isValidSession
+from util.request import *
 
 def profile_page():
     st.set_page_config(page_title="User Profile", layout="wide")
@@ -20,7 +17,6 @@ def profile_page():
         user_info = getUserInfo()
     except Exception as e:
         st.error("Failed to load user information")
-        logger.error(f"API error: {str(e)}")
         st.stop()
 
     # Custom CSS styling
