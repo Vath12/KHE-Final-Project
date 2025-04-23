@@ -105,7 +105,7 @@ def edit_profile_page():
         # Handle form submission
         if submitted:
             if not all([first_name, email]):
-                st.error("Please fill in all required fields (marked with *)")
+                st.error("Please fill in all required fields")
                 st.stop()
                 
             if new_password and (new_password != confirm_password):
@@ -121,7 +121,7 @@ def edit_profile_page():
             }
             
             if new_password:
-                updates['password'] = new_password  # In real app, hash this
+                updates['password'] = new_password
                 
             st.session_state.update(updates)
             st.success("Profile updated successfully!")
