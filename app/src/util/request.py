@@ -32,3 +32,36 @@ def getNotifications():
     """
     result = requests.get(f"http://api:4000/notifications/{st.session_state.get('session_key')}")
     return result.json()
+
+def getAnnouncements(class_id):
+    """
+    Returns a list of dictionaries with the following keys
+    {}
+    """
+    result = requests.get(f"http://api:4000/announcements/{st.session_state.get('session_key')}/{class_id}")
+    return result.json()
+
+def getAssignments(class_id):
+    """
+    Returns a list of dictionaries with the following keys
+    {}
+    """
+    result = requests.get(f"http://api:4000/assignments/{st.session_state.get('session_key')}")
+    return result.json()
+
+def getAssignmentDetails(class_id,assignment_id):
+    """
+    Returns a list of dictionaries with the following keys
+    {}
+    """
+    result = requests.get(f"http://api:4000/assignmentDetails/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    return result.json()
+
+def getGrade(class_id,assignment_id):
+    """
+    Returns a list of dictionaries with the following keys
+    {}
+    """
+    result = requests.get(f"http://api:4000/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    return result.json()
+

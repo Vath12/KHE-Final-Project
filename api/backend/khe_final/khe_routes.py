@@ -163,6 +163,22 @@ def getNotifications(session_key):
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
+@users.route('/announcements/<session_key>/<class_id>')
+def getAnnouncements(session_key,class_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    query = '''
+        SELECT author_id,class_id,title,message,date_posted FROM Announcements WHERE class_id = %s
+    '''
+    success = cursor.execute(query,(class_id))
+    result = cursor.fetchall()
+    return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/assignments/<session_key>/<class_id>')
 def getAssignments(session_key,class_id):
