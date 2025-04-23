@@ -148,24 +148,6 @@ def get_class_list(session_key):
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
-@users.route('/classinfo/<session_key>/<class_id>')
-def getClassInfo(session_key,class_id):
-    cursor = database.get_db().cursor()
-
-    user_id = userIDFromSessionKey(session_key)
-
-    if (user_id == -1):
-        return respond("",CODE_ACCESS_DENIED)
-    if (not isClassMember(user_id,class_id)):
-        return respond("",CODE_ACCESS_DENIED)
-    query = '''
-        SELECT class_id,name,description,organization FROM Classes WHERE 
-        class_id = %s
-    '''
-    success = cursor.execute(query,(class_id))
-    result = cursor.fetchall()
-    return respond(jsonify(result),CODE_SUCCESS)
-
 def getUserClassPermissions(user_id,class_id):
     cursor = database.get_db().cursor()
     query = '''
@@ -196,6 +178,27 @@ def get_class_permissions(session_key,class_id):
         return respond("",CODE_ACCESS_DENIED)
    
     return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+
+@users.route('/classinfo/<session_key>/<class_id>')
+def getClassInfo(session_key,class_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    canViewCode = getUserClassPermissions(user_id,class_id).IS_INSTRUCTOR
+
+    query = f'''
+        SELECT class_id,name,description,organization{',join_code' if canViewCode else ''} FROM Classes WHERE 
+        class_id = %s
+    '''
+    success = cursor.execute(query,(class_id))
+    result = cursor.fetchall()
+    return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/classRoster/<session_key>/<class_id>')
 def get_class_roster(session_key,class_id):
@@ -324,7 +327,38 @@ def intToJoinCode(number):
         code+=values[remainder]
     return code
 
-#Creation Queries
+@users.route("/joinClass/<session_key>/<class_code>")
+def join_class(session_key,class_code):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (len(class_code) != 8):
+        return respond("",CODE_INVALID_FORMAT)
+    
+    query = """
+    SELECT class_id FROM Classes WHERE join_code = %s
+    """
+    cursor.execute(query,(class_code))
+    match = cursor.fetchall()
+    if (len(match) == 0):
+        return respond("",CODE_ACCESS_DENIED)
+    class_id = match[0].class_id
+
+    query = '''
+        INSERT INTO Memberships (user_id,class_id,permission_level,visibility) VALUES
+        (%s,%s,%s,%s)
+    '''
+
+    cursor.execute(query,(user_id,class_id,0,1))
+
+    database.get_db().commit()
+
+    return respond("",200)
+
+
 @users.route("/createClass/<session_key>/<class_name>/<class_description>/<organization>")
 def create_class(session_key,class_name,class_description,organization):
     cursor = database.get_db().cursor()
