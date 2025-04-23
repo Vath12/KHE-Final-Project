@@ -174,7 +174,7 @@ def getAnnouncements(session_key,class_id):
     if (not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     query = '''
-        SELECT author_id,class_id,title,message,date_posted FROM Announcements WHERE class_id = %s
+        SELECT author_id,title,message,date_posted FROM Announcements WHERE class_id = %s
     '''
     success = cursor.execute(query,(class_id))
     result = cursor.fetchall()
@@ -191,7 +191,7 @@ def getAssignments(session_key,class_id):
     if (not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     query = '''
-        SELECT * FROM Assignments WHERE class_id = %s
+        SELECT assignment_id,due_date,name,overall_weight FROM Assignments WHERE class_id = %s
     '''
     success = cursor.execute(query,(class_id))
     result = cursor.fetchall()
@@ -208,7 +208,7 @@ def getAssignmentDetails(session_key,class_id,assignment_id):
     if (not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     query = '''
-        SELECT * FROM AssignmentCriteria WHERE class_id = %s AND assignment_id = %s
+        SELECT name,value,weight FROM AssignmentCriteria WHERE class_id = %s AND assignment_id = %s
     '''
     success = cursor.execute(query,(class_id,assignment_id))
     result = cursor.fetchall()

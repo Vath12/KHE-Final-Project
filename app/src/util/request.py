@@ -1,66 +1,74 @@
 import streamlit as st
 import requests
 
-def getUserInfo():
+def getUserInfo() -> dict:
     """
-    Returns a dictionary with the following keys
+    :rtype: dict
+    :return:
     {username,first_name,last_name,email,bio}
     """
     result = requests.get(f"http://api:4000/userinfo/{st.session_state.get('session_key')}")
     return result.json()[0] #the query returns an array with one dictionary
 
-def getClassList():
+def getClassList() -> list[dict]:
     """
-    Returns a list of dictionaries with the following keys
-    {class_id,name}
+    :rtype: list[dict]
+    :return:
+    [{class_id,name}]
     """
     result = requests.get(f"http://api:4000/classlist/{st.session_state.get('session_key')}")
     return result.json()
 
-def getClassInfo(class_id):
+def getClassInfo(class_id : int) -> dict:
     """
-    Returns a dictionary with the following keys
+    :rtype: dict
+    :return:
     {class_id,name,description,organization}
     """
     result = requests.get(f"http://api:4000/classinfo/{st.session_state.get('session_key')}/{class_id}")
     return result.json()[0]
 
-def getNotifications():
+def getNotifications() -> list[dict]:
     """
-    Returns a list of dictionaries with the following keys
+    :rtype: list[dict]
+    :return:
     {notification_date,assignment_name,class_name}
     """
     result = requests.get(f"http://api:4000/notifications/{st.session_state.get('session_key')}")
     return result.json()
 
-def getAnnouncements(class_id):
+def getAnnouncements(class_id : int) -> list[dict]:
     """
-    Returns a list of dictionaries with the following keys
-    {}
+    :rtype: list[dict]
+    :return:
+    [{author_id,title,message,date_posted}]
     """
     result = requests.get(f"http://api:4000/announcements/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
-def getAssignments(class_id):
+def getAssignments(class_id : int) -> list[dict]:
     """
-    Returns a list of dictionaries with the following keys
-    {}
+    :rtype: list[dict]
+    :return:
+    [{assignment_id,due_date,name,overall_weight}]
     """
     result = requests.get(f"http://api:4000/assignments/{st.session_state.get('session_key')}")
     return result.json()
 
-def getAssignmentDetails(class_id,assignment_id):
+def getAssignmentDetails(class_id : int,assignment_id : int) -> list[dict]:
     """
-    Returns a list of dictionaries with the following keys
-    {}
+    :rtype: list[dict]
+    :return:
+    [{name,value,weight}]
     """
     result = requests.get(f"http://api:4000/assignmentDetails/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
 
-def getGrade(class_id,assignment_id):
+def getGrade(class_id : int,assignment_id : int) -> list[dict]:
     """
-    Returns a list of dictionaries with the following keys
-    {}
+    :rtype: list[dict]
+    :return:
+    [{name,grade,value,weight}]
     """
     result = requests.get(f"http://api:4000/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
