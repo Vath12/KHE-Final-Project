@@ -36,7 +36,7 @@ st.sidebar.markdown(
 )
 
 if st.sidebar.button("Profile"):
-    st.switch_page("pages/profile.py")
+    st.switch_page("pages/profile_display.py")
 if st.sidebar.button("Notifications"):
     st.switch_page("pages/notification.py")
 if st.sidebar.button("Manage Classes"):

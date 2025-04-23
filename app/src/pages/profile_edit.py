@@ -45,7 +45,7 @@ def edit_profile_page():
         if st.button("Home"):
             st.switch_page("home.py")
         if st.button("Profile"):
-            st.switch_page("pages/Profile.py")
+            st.switch_page("pages/profile_display.py")
         if st.button("Logout"):
             st.session_state.clear()
             st.switch_page("home.py")

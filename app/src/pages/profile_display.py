@@ -52,7 +52,7 @@ def profile_page():
         if st.button("Courses"):
             st.switch_page("pages/classes.py")
         if st.button("Edit Profile"):
-            st.switch_page("pages/edit_profile.py")
+            st.switch_page("pages/profile_edit.py")
         if st.button("Logout"):
             st.session_state.clear()
             st.switch_page("pages/home.py")
@@ -62,10 +62,10 @@ def profile_page():
     
     col1, col2 = st.columns([1, 2], gap="large")
 
-    with col1:
-        st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-        st.image("assets/default-avatar.png", use_container_width=True, caption="Profile Picture", output_format="PNG")
-        st.markdown("</div>", unsafe_allow_html=True)
+    #with col1:
+    #    st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
+    #    st.image("assets/default-avatar.png", use_container_width=True, caption="Profile Picture", output_format="PNG")
+    #    st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
         st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
