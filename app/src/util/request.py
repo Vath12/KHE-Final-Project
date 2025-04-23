@@ -87,3 +87,30 @@ def getGrade(class_id : int,assignment_id : int) -> list[dict]:
     result = safeRequest(f"http://api:4000/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
 
+def getClassPermissions(class_id : int) -> dict:
+    """
+    :rtype: dict
+    :return:
+    {
+        CAN_VIEW_ROSTER,
+        CAN_MANAGE_ASSIGNMENTS,
+        CAN_GRADE_ASSIGNMENT,
+        CAN_REMOVE_STUDENT,
+        CAN_EDIT_COURSE,
+        IS_INSTRUCTOR,
+        CAN_VIEW_HIDDEN
+    }
+    """
+    result = safeRequest(f"http://api:4000/classPermissions/{st.session_state.get('session_key')}/{class_id}")
+    return result.json()
+
+def getClassRoster(class_id : int) -> list[dict]:
+    """
+    :rtype: list[dict]
+    :return:
+    [{first_name,last_name}]
+    """
+    result = safeRequest(f"http://api:4000/classRoster/{st.session_state.get('session_key')}/{class_id}")
+    return result.json()
+
+
