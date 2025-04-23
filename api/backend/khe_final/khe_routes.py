@@ -6,23 +6,21 @@ from flask import current_app
 from backend.db_connection import db as database
 import os
 import random
+from enum import IntFlag
 
 CODE_SUCCESS = 200
 CODE_ACCESS_DENIED = 401
 CODE_INVALID_FORMAT = 403
 
-FLAG_CAN_VIEW_ROSTER = 0
-FLAG_CAN_MANAGE_ASSIGNMENTS = 1
-FLAG_CAN_GRADE_ASSIGNMENT = 2
-FLAG_CAN_REMOVE_STUDENT = 4
-FLAG_CAN_EDIT_COURSE = 5
-FLAG_IS_INSTRUCTOR = 6
-FLAG_CAN_VIEW_HIDDEN = 7
 
-def getFlag(flags,index):
-    return (flags >> index) & 0b1
-def setFlag(flags,index,value):
-    return (flags & ~(0b00000000 | 0b1 << index)) | (0b1 if (value) else 0b0 << index)
+class Permissions(IntFlag):
+    CAN_VIEW_ROSTER = 1
+    CAN_MANAGE_ASSIGNMENTS = 2
+    CAN_GRADE_ASSIGNMENT = 4
+    CAN_REMOVE_STUDENT = 8
+    CAN_EDIT_COURSE = 16
+    IS_INSTRUCTOR = 32
+    CAN_VIEW_HIDDEN = 64
 
 def respond(content,code):
     response = make_response(content)
@@ -168,8 +166,66 @@ def getClassInfo(session_key,class_id):
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
+def getUserClassPermissions(user_id,class_id):
+    cursor = database.get_db().cursor()
+    query = '''
+        SELECT * FROM Memberships WHERE user_id = %s AND class_id = %s
+    '''
+    cursor.execute(query,(user_id,class_id))
+    result = cursor.fetchall()
+    perms = 0
+    if (len(result) > 0):
+        perms = Permissions(result[0]["permission_level"])
+
+    result = {
+        'CAN_VIEW_ROSTER' : Permissions.CAN_VIEW_ROSTER in perms,
+        'CAN_MANAGE_ASSIGNMENTS' : Permissions.CAN_MANAGE_ASSIGNMENTS in perms,
+        'CAN_GRADE_ASSIGNMENT' : Permissions.CAN_GRADE_ASSIGNMENT in perms,
+        'CAN_REMOVE_STUDENT' : Permissions.CAN_REMOVE_STUDENT in perms,
+        'CAN_EDIT_COURSE' : Permissions.CAN_EDIT_COURSE in perms,
+        'IS_INSTRUCTOR' : Permissions.IS_INSTRUCTOR in perms,
+        'CAN_VIEW_HIDDEN' : Permissions.CAN_VIEW_HIDDEN in perms
+    }
+    return result
+
+@users.route('/classPermissions/<session_key>/<class_id>')
+def get_class_permissions(session_key,class_id):
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1 or not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+   
+    return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+
+@users.route('/classRoster/<session_key>/<class_id>')
+def get_class_roster(session_key,class_id):
+
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1 or not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms["CAN_VIEW_ROSTER"]):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    query = f'''
+        SELECT first_name, last_name, M.permission_level FROM
+        (
+            SELECT user_id as member_id, permission_level FROM Memberships 
+            WHERE class_id = %s {"" if (Permissions.CAN_VIEW_HIDDEN in perms) else "AND visibility = 1"}
+        ) AS M 
+        JOIN Users ON M.member_id = user_id
+    '''
+    cursor.execute(query,(class_id))
+    result = cursor.fetchall()
+    return (jsonify(result))
+
 @users.route('/notifications/<session_key>')
-def getNotifications(session_key):
+def get_notifications(session_key):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
@@ -186,7 +242,7 @@ def getNotifications(session_key):
     return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/announcements/<session_key>/<class_id>')
-def getAnnouncements(session_key,class_id):
+def get_announcements(session_key,class_id):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
@@ -203,7 +259,7 @@ def getAnnouncements(session_key,class_id):
     return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/assignments/<session_key>/<class_id>')
-def getAssignments(session_key,class_id):
+def get_assignments(session_key,class_id):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
@@ -220,7 +276,7 @@ def getAssignments(session_key,class_id):
     return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/assignmentDetails/<session_key>/<class_id>/<assignment_id>')
-def getAssignmentDetails(session_key,class_id,assignment_id):
+def get_assignment_details(session_key,class_id,assignment_id):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
@@ -237,7 +293,7 @@ def getAssignmentDetails(session_key,class_id,assignment_id):
     return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/grade/<session_key>/<class_id>/<assignment_id>')
-def getGrade(session_key,class_id,assignment_id):
+def get_grade(session_key,class_id,assignment_id):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
@@ -270,7 +326,7 @@ def intToJoinCode(number):
 
 #Creation Queries
 @users.route("/createClass/<session_key>/<class_name>/<class_description>/<organization>")
-def createClass(session_key,class_name,class_description,organization):
+def create_class(session_key,class_name,class_description,organization):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
