@@ -43,7 +43,7 @@ def edit_profile_page():
     # Sidebar Navigation
     with st.sidebar:
         if st.button("Home"):
-            st.switch_page("home.py")
+            st.switch_page("pages/home.py")
         if st.button("Profile"):
             st.switch_page("pages/profile_display.py")
         if st.button("Logout"):
@@ -70,7 +70,7 @@ def edit_profile_page():
                     key="edit_last_name"
                 )
                 username = st.text_input(
-                    "Username",
+                    "Username (cannot be changed)",
                     value=user_info['username'],
                     disabled=True,
                     help="Username cannot be changed"
@@ -78,7 +78,7 @@ def edit_profile_page():
                 
             with cols[1]:
                 email = st.text_input(
-                    "Email",
+                    "Email (not required)",
                     value=user_info['email'],
                     key="edit_email"
                 )
@@ -117,7 +117,7 @@ def edit_profile_page():
 
         # Handle form submission
         if submitted:
-            if not all([first_name, email]):
+            if not first_name:
                 st.error("Please fill in all required fields")
                 st.stop()
                 
