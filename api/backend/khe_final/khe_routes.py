@@ -358,6 +358,46 @@ def join_class(session_key,class_code):
 
     return respond("",200)
 
+def removeUserFromClass(class_id,user_id):
+    cursor = database.get_db().cursor()
+    query  = '''
+    DELETE FROM Memberships WHERE class_id = %s AND user_id = %s
+    '''
+    cursor.execute(query,(class_id,user_id))
+    database.get_db().commit()
+
+@users.route("/leaveClass/<session_key>/<class_id>")
+def leave_class(session_key,class_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    removeUserFromClass(class_id,user_id)
+    return respond("",CODE_SUCCESS)
+
+@users.route("/removeUser/<session_key>/<class_id>/<user_id>")
+def force_leave_class(session_key,class_id,target_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.CAN_REMOVE_STUDENT):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    removeUserFromClass(class_id,target_id)
+    return respond("",CODE_SUCCESS)
 
 @users.route("/createClass/<session_key>/<class_name>/<class_description>/<organization>")
 def create_class(session_key,class_name,class_description,organization):

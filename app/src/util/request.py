@@ -123,14 +123,29 @@ def getComments(class_id,assignment_id) -> list[dict]:
     """
     pass
 
-def leaveClass(class_id,user_id=-1):
+def removeUserFromClass(class_id,user_id=-1) -> bool:
+    """
+    :param2:
+    user_id is optional, if unset will remove current user from the specified class
+    :rtype: bool
+    :return:
+    True if successful
+    """
     if (user_id == -1):
-        pass
+        result = safeRequest(f"{API}/leaveClass/{st.session_state.get('session_key')}/{class_id}")
+        return result.status_code == 200
     else:
-        pass
+        result = safeRequest(f"{API}/removeUser/{st.session_state.get('session_key')}/{class_id}/{user_id}")
+        return result.status_code == 200
 
-def joinClass(class_code):
-    pass
+def joinClass(class_code) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    result = safeRequest(f"{API}/joinClass/{st.session_state.get('session_key')}/{class_code}")
+    return result.status_code == 200
 
 def createClass(class_name,class_description,organization) -> int:
     """
