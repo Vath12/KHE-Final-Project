@@ -24,3 +24,11 @@ def getClassInfo(class_id):
     """
     result = requests.get(f"http://api:4000/classinfo/{st.session_state.get('session_key')}/{class_id}")
     return result.json()[0]
+
+def getNotifications():
+    """
+    Returns a list of dictionaries with the following keys
+    {notification_date,assignment_name,class_name}
+    """
+    result = requests.get(f"http://api:4000/notifications/{st.session_state.get('session_key')}")
+    return result.json()

@@ -6,6 +6,9 @@ from flask import current_app
 from backend.db_connection import db as database
 import os
 
+CODE_SUCCESS = 200
+CODE_ACCESS_DENIED = 401
+CODE_INVALID_FORMAT = 403
 
 def respond(content,code):
     response = make_response(content)
@@ -39,14 +42,11 @@ def userIDFromSessionKey(session_key):
 @users.route('/trylogin/<username>/<password>', methods=['GET','PUT'])
 def try_login(username,password):
     if (len(username) > 64 or len(password)!=64):
-        response.status_code = 400#incorrect format
-        return ""
+        return respond("",CODE_INVALID_FORMAT)
 
     # get a cursor object from the database
     cursor = database.get_db().cursor()
-    #username = hamburger
-    #password = password
-    #hash = 5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8
+
     query = f'''
         SELECT user_id
         FROM Users
@@ -56,9 +56,7 @@ def try_login(username,password):
     # The cursor will return the data as a Python Dictionary
     user = cursor.fetchall()
     if (len(user) != 1):
-        response = make_response("")
-        response.status_code = 401 #incorrect credentials
-        return response
+        return respond("",CODE_ACCESS_DENIED)
     user = user[0]["user_id"]
     log(f"user: {user}\n")
     query = f'''
@@ -83,7 +81,7 @@ def try_login(username,password):
 
     database.get_db().commit()
 
-    return respond(str(session_key[0]["session_key"]),200)
+    return respond(str(session_key[0]["session_key"]),CODE_SUCCESS)
     
 
 #trylogin/hamburger/5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8
@@ -94,15 +92,13 @@ def get_user_info(session_key):
 
     user_id = userIDFromSessionKey(session_key)
     if (user_id == -1):
-        response = make_response("")
-        response.status_code = 401 #incorrect credentials
-        return response
+        return respond("",CODE_ACCESS_DENIED)
     query = f'''
         SELECT username,first_name,last_name,bio,email FROM Users WHERE user_id = {user_id}
     '''
     success = cursor.execute(query)
     result = cursor.fetchall()
-    return respond(jsonify(result),200)
+    return respond(jsonify(result),CODE_SUCCESS)
 
 
 @users.route('/isValidSession/<session_key>', methods=['GET'])
@@ -115,13 +111,13 @@ def get_class_list(session_key):
 
     user_id = userIDFromSessionKey(session_key)
     if (user_id == -1):
-        return make_response("",status_code=401)
+        return respond("",CODE_ACCESS_DENIED)
     query = f'''
         SELECT class_id,name FROM Classes WHERE class_id in (SELECT class_id FROM Memberships WHERE user_id = {user_id})
     '''
     success = cursor.execute(query)
     result = cursor.fetchall()
-    return respond(jsonify(result),200)
+    return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/classinfo/<session_key>/<class_id>')
 def getClassInfo(session_key,class_id):
@@ -130,7 +126,7 @@ def getClassInfo(session_key,class_id):
     user_id = userIDFromSessionKey(session_key)
 
     if (user_id == -1):
-        return respond("",401)
+        return respond("",CODE_ACCESS_DENIED)
     query = f'''
         SELECT class_id,name,description,organization FROM Classes WHERE 
         class_id = {class_id} AND class_id in 
@@ -138,4 +134,22 @@ def getClassInfo(session_key,class_id):
     '''
     success = cursor.execute(query)
     result = cursor.fetchall()
-    return respond(jsonify(result),200)
+    return respond(jsonify(result),CODE_SUCCESS)
+
+@users.route('/notifications/<session_key>')
+def getNotifications(session_key):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    query = f'''
+        SELECT N.notification_date,A.name as assignment_name,C.name as class_name FROM 
+        (Assignments as A JOIN Notifications as N) JOIN Classes as C WHERE student_id = {user_id}
+    '''
+    success = cursor.execute(query)
+    result = cursor.fetchall()
+    return respond(jsonify(result),CODE_SUCCESS)
+
