@@ -105,9 +105,9 @@ CREATE TABLE Memberships (
 );
 
 CREATE TABLE LoginSessions (
+    session_key INTEGER NOT NULL AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
-    session_key INTEGER NOT NULL UNIQUE,
     expiration_time DATETIME NOT NULL,
-    PRIMARY KEY (user_id,session_key),
+    PRIMARY KEY (session_key),
     FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE
 );
