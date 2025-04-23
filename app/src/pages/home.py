@@ -40,15 +40,15 @@ st.sidebar.markdown("<div class='sidebar-title'>📘 GradeBook</div>", unsafe_al
 if st.session_state.is_ta:
     st.sidebar.markdown("<div class='ta-section'>", unsafe_allow_html=True)
     st.sidebar.markdown("### TA Controls")
-    if st.sidebar.button("➕ Create New Class", use_container_width=True):
+    if st.sidebar.button("Create New Class", use_container_width=True):
         st.switch_page("pages/add_class.py")
     st.sidebar.markdown("</div>", unsafe_allow_html=True)
 
 # General sidebar links
-st.sidebar.markdown("<div class='sidebar-link'>🔔 Notifications</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>📚 Courses</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>👨‍🏫 Instructors</div>", unsafe_allow_html=True)
-st.sidebar.markdown("<div class='sidebar-link'>🙍 Profile</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Notifications</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Courses</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Instructors</div>", unsafe_allow_html=True)
+st.sidebar.markdown("<div class='sidebar-link'>Profile</div>", unsafe_allow_html=True)
 
 # ---------- Page Title ----------
 st.markdown(
@@ -110,5 +110,5 @@ if st.session_state.is_ta:
         unsafe_allow_html=True
     )
     
-    if st.button("➕ Create New Class", key="float_add"):
+    if st.button("Create New Class", key="float_add"):
         st.switch_page("pages/add_class.py")
