@@ -39,3 +39,7 @@ if st.button("Join Class", use_container_width=True):
                 st.error("Failed to join the class. Please check the code and try again.")
         except Exception as e:
             st.error(f"An error occurred while joining the class: {e}")
+
+# ---------- Home Button ----------
+if st.button("Go Home", use_container_width=True):
+    st.switch_page("pages/home.py")
