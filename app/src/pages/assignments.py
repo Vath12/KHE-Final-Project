@@ -33,22 +33,17 @@ if st.button("Create Assignment", use_container_width=True):
     if not assignment_name or not due_date or not description:
         st.warning("Please fill out all required fields.")
     else:
-        try:
-            # Use the selected class ID from session state
-            class_id = st.session_state.selected_class_id
-            
-            # Create the assignment using the provided function
-            assignment_id = createAssignment(class_id, assignment_name, due_date, weight)
+        # Use the selected class ID from session state
+        class_id = st.session_state.selected_class_id
+        
+        # Create the assignment using the provided function
+        assignment_id = createAssignment(class_id, assignment_name, str(due_date), weight/100.0)
 
-            # Display success message
-            st.success(f"Assignment '{assignment_name}' created successfully!")
-
-            # Redirect back to the class page
-            st.session_state["assignment_created"] = True 
-            st.switch_page(f"pages/classes.py")  #
-
-        except Exception as e:
-            st.error(f"Failed to create assignment: {e}")
+        # Display success message
+        st.success(f"Assignment '{assignment_name}' created successfully!")
+        # Redirect back to the class page
+        st.session_state["assignment_created"] = True 
+        st.switch_page(f"pages/classes.py") 
 
 # ---------- Back Button ----------
 if st.button("Back to Class", use_container_width=True):
