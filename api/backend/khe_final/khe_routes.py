@@ -428,7 +428,6 @@ def force_leave_class(session_key,class_id,target_id):
 
 @users.route("/createClass/<session_key>",methods=["POST"])
 def create_class(session_key):
-    data = request.form
 
     cursor = database.get_db().cursor()
 
@@ -453,7 +452,12 @@ def create_class(session_key):
         (%s,%s,%s,%s);
     '''
 
-    cursor.execute(query,(data.class_name,data.class_description,data.organization,join_code))
+    args = request.get_json(force=True)
+
+    if (args.get('class_name') == None or args.get('class_description') == None or args.get('organization') == None):
+        return respond("",CODE_INVALID_FORMAT)
+    
+    cursor.execute(query,(args.class_name,args.class_description,args.organization,join_code))
 
     cursor.execute('SELECT LAST_INSERT_ID()')
     class_id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
