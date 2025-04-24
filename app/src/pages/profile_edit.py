@@ -31,8 +31,17 @@ def edit_profile_page():
             border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-left: 10%; /* Move to the left */
-            margin-right: 10%; /* Optional: limit right margin for balanced appearance */
+            margin-left: 10%;
+            margin-right: 10%;
+        }
+        .social-icon {
+            height: 24px;
+            margin-right: 6px;
+        }
+        .social-field {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
         }
         .required-asterisk {
             color: #e74c3c;
@@ -97,14 +106,31 @@ def edit_profile_page():
                     type="password",
                     key="confirm_pass"
                 )
-            
+
+            st.markdown("### Social Media Links")
+
+            social_cols = st.columns(5)
+            platforms = [
+                ("Snapchat", "snap.png", "snapchat_link"),
+                ("Instagram", "insta.png", "instagram_link"),
+                ("Discord", "disc.png", "discord_link"),
+                ("GitHub", "hub.png", "github_link"),
+                ("Facebook", "face.png", "facebook_link")
+            ]
+            social_links = {}
+
+            for i, (label, icon, key_name) in enumerate(platforms):
+                with social_cols[i]:
+                    st.image(f"assets/{icon}", width=24)
+                    social_links[key_name] = st.text_input("", value=user_info.get(key_name, ""), key=key_name, label_visibility="collapsed")
+
             bio = st.text_area(
                 "Bio",
                 value=user_info.get('bio', ''),
                 height=100,
                 key="edit_bio"
             )
-            
+
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Form Controls
@@ -128,21 +154,22 @@ def edit_profile_page():
             if new_password and (new_password != confirm_password):
                 st.error("Passwords do not match!")
                 st.stop()
-                
-            # Update user data via API
-            try:
 
+            try:
                 setUserInfo(
-                    first_name =  None if (first_name == "") else first_name,
-                    last_name =  None if (last_name == "") else last_name,
-                    email = None if (email == "") else email,
-                    bio = None if (bio == "") else bio,
-                    password=  None if (new_password == "") else new_password
+                    first_name=None if first_name == "" else first_name,
+                    last_name=None if last_name == "" else last_name,
+                    email=None if email == "" else email,
+                    bio=None if bio == "" else bio,
+                    password=None if new_password == "" else new_password,
+                    snapchat=social_links["snapchat_link"],
+                    instagram=social_links["instagram_link"],
+                    discord=social_links["discord_link"],
+                    github=social_links["github_link"],
+                    facebook=social_links["facebook_link"]
                 )
-                
                 st.success("Profile updated successfully!")
                 st.switch_page("pages/profile_display.py")
-                
             except Exception as e:
                 st.error(f"Update failed: {str(e)}")
                 logger.error(f"Update error: {str(e)}")

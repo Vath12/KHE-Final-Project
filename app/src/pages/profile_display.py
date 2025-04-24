@@ -51,7 +51,7 @@ def profile_page():
         if st.button("Home"):
             st.switch_page("pages/home.py")
         if st.button("Courses"):
-            st.switch_page("pages/classes.py")
+            st.switch_page("pages/home.py")
         if st.button("Edit Profile"):
             st.switch_page("pages/profile_edit.py")
         if st.button("Logout"):
