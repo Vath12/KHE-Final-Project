@@ -23,12 +23,12 @@ class Permissions(IntFlag):
     CAN_VIEW_HIDDEN = 64
 
 PROFILE_LINK_PLATFORMS = {
-    LINKEDIN = 0,
-    SNAPCHAT = 1,
-    INSTAGRAM = 2,
-    DISCORD = 3,
-    GITHUB = 4,
-    FACEBOOK = 5
+    "LINKEDIN" : 0,
+    "SNAPCHAT" : 1,
+    "INSTAGRAM" : 2,
+    "DISCORD" : 3,
+    "GITHUB" : 4,
+    "FACEBOOK" : 5
 }
 
 
