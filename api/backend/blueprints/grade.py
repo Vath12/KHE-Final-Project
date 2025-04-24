@@ -86,7 +86,7 @@ def grade(session_key,class_id,assignment_id,student_id):
         database.get_db().commit()
         return respond("",CODE_SUCCESS)
     
-    args = request.get_json(Force=True)
+    args = request.get_json(force=True)
 
     if (args.get("criterion_id") == None):
         return respond("",CODE_INVALID_FORMAT)
@@ -107,6 +107,7 @@ def grade(session_key,class_id,assignment_id,student_id):
             '''
             cursor.execute(query,(args.get("criterion_id"),student_id,args.get("grade")))
             database.get_db().commit()
+            return respond("",CODE_SUCCESS)
         else:
             query = f'''
                 UPDATE Grades SET  
@@ -114,3 +115,4 @@ def grade(session_key,class_id,assignment_id,student_id):
             '''
             cursor.execute(query,(args.get("grade"),args.get("criterion_id"),student_id))
             database.get_db().commit()
+            return respond("",CODE_SUCCESS)
