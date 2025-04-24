@@ -13,12 +13,8 @@ def profile_display():
         st.stop()
     
     # Get user data from API
-    try:
-        user_info = getUserInfo()
-        profile_links = getUserProfileLinks()  # Fetch social media links
-    except Exception as e:
-        st.error("Failed to load user information")
-        st.stop()
+    user_info = getUserInfo()
+    profile_links = getUserProfileLinks()  # Fetch social media links
 
     # Platform icons and mapping
     platform_icons = {
