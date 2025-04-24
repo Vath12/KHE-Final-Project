@@ -22,6 +22,17 @@ class Permissions(IntFlag):
     IS_INSTRUCTOR = 32
     CAN_VIEW_HIDDEN = 64
 
+PROFILE_LINK_PLATFORMS = {
+    LINKEDIN = 0,
+    SNAPCHAT = 1,
+    INSTAGRAM = 2,
+    DISCORD = 3,
+    GITHUB = 4,
+    FACEBOOK = 5
+}
+
+
+
 def respond(content,code):
     response = make_response(content)
     response.status_code = code

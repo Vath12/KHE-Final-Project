@@ -45,7 +45,7 @@ def create_app():
     #app.register_blueprint(simple_routes)
     app.register_blueprint(users)
     app.register_blueprint(assignments)
-     app.register_blueprint(assignmentCriteria)
+    app.register_blueprint(assignmentCriteria)
     app.register_blueprint(classes)
     app.register_blueprint(comments)
     app.register_blueprint(notifications)
