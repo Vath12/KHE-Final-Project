@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+import json
+import hashlib
 
 EXCEPTION_REDIRECT = "Login"
 API = "http://api:4000"
@@ -16,6 +18,29 @@ def safeRequest(URL):
         return None
     
 
+def safePost(URL,jsonData):
+    """
+    Tries to put data to the input URL, if the request fails it switches to safe error page specified by
+    EXCEPTION_REDIRECT
+    """
+    try:
+        return requests.post(URL,json=jsonData)
+    except requests.exceptions.HTTPError:
+        st.switch_page(EXCEPTION_REDIRECT)
+        return None
+    
+def safeDelete(URL,jsonData):
+    """
+    Tries to put data to the input URL, if the request fails it switches to safe error page specified by
+    EXCEPTION_REDIRECT
+    """
+    try:
+        return requests.delete(URL,json=jsonData)
+    except requests.exceptions.HTTPError:
+        st.switch_page(EXCEPTION_REDIRECT)
+        return None
+    
+
 def getUserInfo() -> dict:
     """
     :rtype: dict
@@ -24,6 +49,23 @@ def getUserInfo() -> dict:
     """
     result = safeRequest(f"{API}/userinfo/{st.session_state.get('session_key')}")
     return result.json()[0] #the query returns an array with one dictionary
+
+def setUserInfo(first_name=None,last_name=None,bio = None,password = None,email = None) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    data = {
+        'first_name' : first_name,
+        'last_name' : last_name, 
+        'email_name' : email,
+        'bio' : bio,
+        'password' : None if (password == None) else hashlib.sha256(password).hexdigest(),
+    }
+    result = safePost(f"{API}/userinfo/{st.session_state.get('session_key')}",json.dumps(data))
+    return result.status_code == 200
+
 
 def getClassList() -> list[dict]:
     """
@@ -115,14 +157,6 @@ def getClassRoster(class_id : int) -> list[dict]:
     result = safeRequest(f"{API}/classRoster/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
-def getComments(class_id,assignment_id) -> list[dict]:
-    """
-    :rtype: int
-    :return:
-    [{message,author_first_name,author_last_name,created_on}]
-    """
-    pass
-
 def removeUserFromClass(class_id,user_id=-1) -> bool:
     """
     :param2:
@@ -132,10 +166,10 @@ def removeUserFromClass(class_id,user_id=-1) -> bool:
     True if successful
     """
     if (user_id == -1):
-        result = safeRequest(f"{API}/leaveClass/{st.session_state.get('session_key')}/{class_id}")
+        result = safeDelete(f"{API}/leaveClass/{st.session_state.get('session_key')}/{class_id}")
         return result.status_code == 200
     else:
-        result = safeRequest(f"{API}/removeUser/{st.session_state.get('session_key')}/{class_id}/{user_id}")
+        result = safeDelete(f"{API}/removeUser/{st.session_state.get('session_key')}/{class_id}/{user_id}")
         return result.status_code == 200
 
 def joinClass(class_code) -> bool:
@@ -153,15 +187,47 @@ def createClass(class_name,class_description,organization) -> int:
     :return:
     class_id
     """
-    result = safeRequest(f"{API}/createClass/{st.session_state.get('session_key')}/{class_name}/{class_description}/{organization}")
+    data = {
+     'class_name' : class_name,
+     'class_description' : class_description,
+     'organization' : organization
+    }
+    result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",json.dumps(data))
     return int(result.content)
 
 def createAssignment():
+    """
+    TODO: IMPLEMENT
+    :rtype: int
+    :return:
+    assignment_id
+    """
     pass
     
-def gradeAssignment():
+def gradeAssignment(class_id,criterion_id,student_id,grade):
+    """
+    TODO: IMPLEMENT
+    :rtype: bool
+    :return:
+    True if successful
+    """
     pass
 
 def createComment():
+    """
+    TODO: IMPLEMENT
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    pass
+
+def getComments(class_id,assignment_id) -> list[dict]:
+    """
+    TODO: IMPLEMENT
+    :rtype: list[dict]
+    :return:
+    [{message,author_first_name,author_last_name,created_on}]
+    """
     pass
 
