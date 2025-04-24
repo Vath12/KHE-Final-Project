@@ -29,6 +29,17 @@ def safePost(URL,jsonData):
         st.switch_page(EXCEPTION_REDIRECT)
         return None
     
+def safePut(URL,jsonData):
+    """
+    Tries to put data to the input URL, if the request fails it switches to safe error page specified by
+    EXCEPTION_REDIRECT
+    """
+    try:
+        return requests.put(URL,json=jsonData)
+    except requests.exceptions.HTTPError:
+        st.switch_page(EXCEPTION_REDIRECT)
+        return None
+    
 def safeDelete(URL,jsonData):
     """
     Tries to put data to the input URL, if the request fails it switches to safe error page specified by
@@ -226,14 +237,45 @@ def createClass(class_name,class_description,organization) -> int:
     result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",data)
     return int(result.content)
 
-def createAssignment():
+def createAssignment(class_id,name,due,weight):
     """
     TODO: IMPLEMENT
-    :rtype: int
+    :rtype: bool
     :return:
     assignment_id
     """
-    pass
+    data = {
+     'name' : name,
+     'due_date' : due,
+     'overall_weight' : weight
+    }
+    result = safePost(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/-1",data)
+    return int(result.content)
+
+def updateAssignmnet(class_id,assignment_id,name,due,weight):
+    """
+    TODO: IMPLEMENT
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+     'name' : name,
+     'due_date' : due,
+     'overall_weight' : weight
+    }
+    result = safePut(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}",data)
+    return result.status_code == 200
+
+def deleteAssignment(class_id,assignment_id):
+    """
+    TODO: IMPLEMENT
+    :rtype: bool
+    :return:
+    True on success
+    """
+    result = safeDelete(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    return result.status_code == 200
     
 def gradeAssignment(class_id,criterion_id,student_id,grade):
     """

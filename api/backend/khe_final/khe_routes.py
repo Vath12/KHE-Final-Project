@@ -516,5 +516,67 @@ def create_class(session_key):
 
     return respond(str(class_id),200)
 
+@users.route("/modifyAssignment/<session_key>/<class_id>/<assignment_id>",methods=["POST","PUT","DELETE"])
+def create_update_delete_assignment(session_key,class_id,assignment_id):
+    cursor = database.get_db().cursor()
 
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.get("CAN_MANAGE_ASSIGNMENTS",False)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    args = request.get_json(force = True)
+
+    if (request.method == "POST"):
+        query = '''
+        INSERT INTO Assignments (class_id,name,due_date,overall_weight) VALUES
+        (%s,%s,%s,%s)
+        '''
+        cursor.execute(query,(
+            class_id,
+            args.get("name","Untitled"),
+            args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
+            args.get("overall_weight",1)
+        ))
+
+        database.get_db().commit()
+
+        cursor.execute('SELECT LAST_INSERT_ID()')
+        id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
+
+        return respond(str(id),CODE_SUCCESS)
+    
+    if (request.method == "PUT"):
+        query = '''
+        UPDATE Assignments SET
+        name=%s,
+        due_date=%s,
+        overall_weight=%s WHERE assignment_id = %s
+        '''
+        cursor.execute(query,(
+            class_id,
+            args.get("name","Untitled"),
+            args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
+            args.get("overall_weight",1),
+            assignment_id
+        ))
+
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
+
+    if (request.method == "DELETE"):
+        query = '''
+        DELETE Assignments WHERE assignment_id = %s
+        '''
+        cursor.execute(query,(assignment_id))
+
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
 
