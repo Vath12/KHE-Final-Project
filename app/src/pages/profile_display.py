@@ -84,17 +84,28 @@ def profile_display():
     st.header(f"{user_info['first_name']}'s Profile")
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
+    cols = None
+    col = 4
     # Social Media Links
     if profile_links:
         st.markdown("<div class='social-icons'>", unsafe_allow_html=True)
         for link in profile_links:
+            if (col == 4):
+                cols = st.columns(4)
+                col = 0
             platform = link['platform']
             url = link['link']
-            if url and url.lower() != "no link":
+            if url != "":
                 icon_path = platform_icons.get(platform)
                 if icon_path:
-                    # Display the social media icon with link
-                    st.markdown(f"<a href='{url}' target='_blank'><img src='/{icon_path}' alt='social icon'></a>", unsafe_allow_html=True)
+                    with cols[col]:
+                        l,r = st.columns((0.2,0.8))
+                        with l:
+                            st.image(icon_path, width=30)
+                        with r:
+                            st.markdown(f"<p>{url}</p>", unsafe_allow_html=True)
+                    col+=1
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     # User Information

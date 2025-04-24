@@ -162,34 +162,41 @@ def crud_profile_links(session_key,platform_id):
     
     args = request.get_json(force = True)
 
-    if (request.method == "POST"):
+    if (request.method == "PUT" or request.method == "POST"):
         query = '''
-            INSERT INTO UserProfileLinks (user_id,platform,link) Value
-            (%s,%s,%s)
+            SELECT * FROM UserProfileLinks WHERE user_id = %s AND platform = %s
         '''
-        cursor.execute(query,(
-            user_id,
-            platform_id,
-            args.get("link","")
-        ))
-        database.get_db().commit()
+        cursor.execute(query,(user_id,platform_id))
+        result = cursor.fetchall()
 
-        return respond("",CODE_SUCCESS)
+        if (len(result) == 0):
+            query = '''
+                INSERT INTO UserProfileLinks (user_id,platform,link) Value
+                (%s,%s,%s)
+            '''
+            cursor.execute(query,(
+                user_id,
+                platform_id,
+                args.get("link","")
+            ))
+            database.get_db().commit()
 
-    if (request.method == "PUT"):
-        query = '''
-            UPDATE UserProfileLinks SET 
-            link = %s
-            WHERE 
-            platform = %s AND user_id = %s
-        '''
-        cursor.execute(query,(
-            args.get("link",""),
-            platform_id,
-            user_id
-        ))
-        database.get_db().commit()
-        return respond("",CODE_SUCCESS)
+            return respond("",CODE_SUCCESS)
+        else:
+            query = '''
+                UPDATE UserProfileLinks SET 
+                link = %s
+                WHERE 
+                platform = %s AND user_id = %s
+            '''
+            cursor.execute(query,(
+                args.get("link",""),
+                platform_id,
+                user_id
+            ))
+            database.get_db().commit()
+            return respond("",CODE_SUCCESS)
+        
     if (request.method == "DELETE"):
         query = '''
             DELETE FROM UserProfileLinks WHERE user_id = %s AND platform = %s

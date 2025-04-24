@@ -105,7 +105,7 @@ def addUserProfileLink(platform : int,link : str) -> bool:
     result = safePost(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",data)
     return result.status_code == 200
 
-def updateUserProfileLink(platform : int,link : str) -> bool:
+def setUserProfileLink(platform : int,link : str) -> bool:
     """
     :rtype: bool
     :return:

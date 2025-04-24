@@ -12,14 +12,6 @@ def get_social_links_dict():
     except:
         return {}
 
-def setUserProfileLink(platform_id: int, link: str) -> bool:
-    data = {
-        "platform_id": platform_id,
-        "link": link
-    }
-    result = safePost(f"{API}/userProfileLink/{st.session_state.get('session_key')}", data)
-    return result.status_code == 200
-
 def edit_profile_page():
     st.set_page_config(page_title="Edit Profile", layout="centered")
 
@@ -125,24 +117,22 @@ def edit_profile_page():
                 st.error("Passwords do not match!")
                 st.stop()
 
-            try:
-                setUserInfo(
-                    first_name=None if first_name == "" else first_name,
-                    last_name=None if last_name == "" else last_name,
-                    email=None if email == "" else email,
-                    bio=None if bio == "" else bio,
-                    password=None if new_password == "" else new_password
-                )
+            
+            setUserInfo(
+                first_name=None if first_name == "" else first_name,
+                last_name=None if last_name == "" else last_name,
+                email=None if email == "" else email,
+                bio=None if bio == "" else bio,
+                password=None if new_password == "" else new_password
+            )
 
-                for platform_id, link in new_links.items():
-                    setUserProfileLink(platform_id, link)
+            for platform_id, link in new_links.items():
+                setUserProfileLink(platform_id, link)
 
-                st.success("Profile updated successfully!")
-                st.switch_page("pages/profile_display.py")
+            st.success("Profile updated successfully!")
+            st.switch_page("pages/profile_display.py")
 
-            except Exception as e:
-                st.error(f"Update failed: {str(e)}")
-                logger.error(f"Update error: {str(e)}")
+           
 
 if __name__ == "__main__":
     edit_profile_page()
