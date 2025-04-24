@@ -27,7 +27,8 @@ def profile_page():
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             background-color: #f8f9fa;
-            margin-bottom: 1.5rem;
+            margin: 2rem auto;
+            max-width: 800px;
         }
         .divider {
             border-top: 2px solid #eee;
@@ -59,48 +60,36 @@ def profile_page():
 
     # Main Content
     st.title("User Profile")
-    
-    col1, col2 = st.columns([1, 2], gap="large")
 
-    #with col1:
-    #    st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-    #    st.image("assets/default-avatar.png", use_container_width=True, caption="Profile Picture", output_format="PNG")
-    #    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
+    st.header(f"{user_info['first_name']}'s Profile")
+    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-    with col2:
-        st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
-        st.header(f"{user_info['first_name']}'s Profile")
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-
-        # User Information
-        cols = st.columns(2)
-        with cols[0]:
-            st.markdown("<div class='info-label'>First Name</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{user_info['first_name']}</div>", unsafe_allow_html=True)
-            
-            st.markdown("<div class='info-label'>Last Name</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{user_info['last_name']}</div>", unsafe_allow_html=True)
-            
-            st.markdown("<div class='info-label'>Username</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{user_info['username']}</div>", unsafe_allow_html=True)
-
-        with cols[1]:
-            st.markdown("<div class='info-label'>Email</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{user_info['email']}</div>", unsafe_allow_html=True)
-            
-            st.markdown("<div class='info-label'>Role</div>", unsafe_allow_html=True)
-            role_display = user_info.get('role', 'student').replace('_', ' ').title()
-            st.markdown(f"<div class='info-value'>{role_display}</div>", unsafe_allow_html=True)
-            
-            st.markdown("<div class='info-label'>Member Since</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='info-value'>{user_info.get('join_date', '2024-01-01')}</div>", unsafe_allow_html=True)
-
-        # Bio Section
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-        st.markdown("<div class='info-label'>Bio</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='info-value'>{user_info.get('bio', 'No bio provided')}</div>", unsafe_allow_html=True)
+    # User Information
+    cols = st.columns(2)
+    with cols[0]:
+        st.markdown("<div class='info-label'>First Name</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-value'>{user_info['first_name']}</div>", unsafe_allow_html=True)
         
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<div class='info-label'>Last Name</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-value'>{user_info['last_name']}</div>", unsafe_allow_html=True)
+        
+        st.markdown("<div class='info-label'>Username</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-value'>{user_info['username']}</div>", unsafe_allow_html=True)
+
+    with cols[1]:
+        st.markdown("<div class='info-label'>Email</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-value'>{user_info['email']}</div>", unsafe_allow_html=True)
+        
+        st.markdown("<div class='info-label'>Member Since</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='info-value'>{user_info.get('join_date', '2024-01-01')}</div>", unsafe_allow_html=True)
+
+    # Bio Section
+    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='info-label'>Bio</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='info-value'>{user_info.get('bio', 'No bio provided')}</div>", unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     profile_page()

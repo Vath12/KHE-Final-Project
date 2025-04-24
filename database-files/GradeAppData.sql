@@ -17,9 +17,9 @@ INSERT INTO Classes VALUES
 (1,'CS3200','Introduction to Databases','Northeastern University','ABX0101C');
 
 INSERT INTO Memberships VALUES
-(1,1,0b1111,1),
-(2,1,0b0000,1),
-(3,1,0b0000,1);
+(1,1,0b11111111,1),
+(2,1,0b00000000,1),
+(3,1,0b00000000,1);
 
 INSERT INTO Announcements VALUES
 (1,1,1,'Welcome','hello everyone!','2025-04-12 08:34:33');

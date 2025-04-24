@@ -70,7 +70,7 @@ def isClassMember(user_id,class_id):
 
 
 
-@users.route('/trylogin/<username>/<password>', methods=['GET','PUT'])
+@users.route('/trylogin/<username>/<password>', methods=['GET'])
 def try_login(username,password):
     if (len(username) > 64 or len(password)!=64):
         return respond("",CODE_INVALID_FORMAT)
@@ -115,20 +115,50 @@ def try_login(username,password):
 
 #trylogin/hamburger/5E884898DA28047151D0E56F8DC6292773603D0D6AABBDD62A11EF721D1542D8
 
-@users.route('/userinfo/<session_key>', methods=['GET'])
+@users.route('/userinfo/<session_key>', methods=['GET','POST'])
 def get_user_info(session_key):
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
     if (user_id == -1):
         return respond("",CODE_ACCESS_DENIED)
-    query = '''
-        SELECT username,first_name,last_name,bio,email FROM Users WHERE user_id = %s
-    '''
-    success = cursor.execute(query,(user_id))
-    result = cursor.fetchall()
-    return respond(jsonify(result),CODE_SUCCESS)
+    
+    if (request.method == "GET"):
+        query = '''
+            SELECT username,first_name,last_name,bio,email FROM Users WHERE user_id = %s
+        '''
+        success = cursor.execute(query,(user_id))
+        result = cursor.fetchall()
+        return respond(jsonify(result),CODE_SUCCESS)
+    
+    if (request.method == "POST"):
+        fields = ['first_name','last_name','bio','email','password']
 
+        args = request.get_json(force=True)
+
+        data = []
+        set_clause = ""
+
+        for field in fields:
+            if args.get(field) is not None:
+                set_clause += f"{field} = %s,"
+                if (field == "password"):
+                    data.append(bytes.fromhex(args[field]))
+                else:
+                    data.append(args[field])
+
+        set_clause = set_clause.rstrip(', ')
+        
+        if (set_clause != ""):
+            query = f'''
+                UPDATE Users 
+                SET {set_clause} 
+                WHERE user_id = {user_id}
+            '''
+            cursor.execute(query,data)
+            database.get_db().commit()
+        
+        return respond("",CODE_SUCCESS)
 
 @users.route('/isValidSession/<session_key>', methods=['GET'])
 def get_valid_session(session_key):
@@ -145,24 +175,6 @@ def get_class_list(session_key):
         SELECT class_id,name FROM Classes WHERE class_id in (SELECT class_id FROM Memberships WHERE user_id = %s)
     '''
     success = cursor.execute(query,(user_id))
-    result = cursor.fetchall()
-    return respond(jsonify(result),CODE_SUCCESS)
-
-@users.route('/classinfo/<session_key>/<class_id>')
-def getClassInfo(session_key,class_id):
-    cursor = database.get_db().cursor()
-
-    user_id = userIDFromSessionKey(session_key)
-
-    if (user_id == -1):
-        return respond("",CODE_ACCESS_DENIED)
-    if (not isClassMember(user_id,class_id)):
-        return respond("",CODE_ACCESS_DENIED)
-    query = '''
-        SELECT class_id,name,description,organization FROM Classes WHERE 
-        class_id = %s
-    '''
-    success = cursor.execute(query,(class_id))
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
@@ -188,14 +200,79 @@ def getUserClassPermissions(user_id,class_id):
     }
     return result
 
-@users.route('/classPermissions/<session_key>/<class_id>')
-def get_class_permissions(session_key,class_id):
+@users.route('/classPermissions/<session_key>/<class_id>',methods = ["GET","POST"])
+def class_permissions(session_key,class_id):
+    cursor = database.get_db().cursor()
     user_id = userIDFromSessionKey(session_key)
-
+    
     if (user_id == -1 or not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
-   
-    return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+    
+    if (request.method == "GET"):
+        return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+    
+    if (request.method == "POST"):
+
+        perms  = getUserClassPermissions(user_id,class_id)
+
+        if (not perms.get('CAN_EDIT_COURSE')):
+            return respond("",CODE_ACCESS_DENIED)
+            
+        args = request.get_json(force=True)
+
+        flags = Permissions(0)
+
+        target_id = args.get("user_id")
+        if (target_id == None):
+            return respond("",CODE_INVALID_FORMAT)
+        
+        if (args.get('CAN_VIEW_ROSTER')):
+            flags |= Permissions.CAN_VIEW_ROSTER
+        if (args.get('CAN_MANAGE_ASSIGNMENTS')):
+            flags |= Permissions.CAN_MANAGE_ASSIGNMENTS
+        if (args.get('CAN_GRADE_ASSIGNMENT')):
+            flags |= Permissions.CAN_GRADE_ASSIGNMENT
+        if (args.get('CAN_REMOVE_STUDENT')):
+            flags |= Permissions.CAN_REMOVE_STUDENT
+        if (args.get('CAN_EDIT_COURSE')):
+            flags |= Permissions.CAN_EDIT_COURSE
+        if (args.get('IS_INSTRUCTOR')):
+            flags |= Permissions.IS_INSTRUCTOR
+        if (args.get('CAN_VIEW_HIDDEN')):
+            flags |= Permissions.CAN_VIEW_HIDDEN
+        
+        query = f'''
+            UPDATE Memberships
+            SET permission_level = {int(flags)}, visibility = {1 if args.get('IS_VISIBLE') == True else 0}
+            WHERE user_id = {target_id}
+        '''
+        log(query)
+        cursor.execute(query)
+        database.get_db().commit()
+
+        return respond("",CODE_SUCCESS)
+
+
+@users.route('/classinfo/<session_key>/<class_id>')
+def getClassInfo(session_key,class_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    canViewCode = getUserClassPermissions(user_id,class_id).get('IS_INSTRUCTOR')
+
+    query = f'''
+        SELECT class_id,name,description,organization{',join_code' if canViewCode else ''} FROM Classes WHERE 
+        class_id = %s
+    '''
+    success = cursor.execute(query,(class_id))
+    result = cursor.fetchall()
+    return respond(jsonify(result),CODE_SUCCESS)
 
 @users.route('/classRoster/<session_key>/<class_id>')
 def get_class_roster(session_key,class_id):
@@ -213,7 +290,7 @@ def get_class_roster(session_key,class_id):
         return respond("",CODE_ACCESS_DENIED)
     
     query = f'''
-        SELECT first_name, last_name, M.permission_level FROM
+        SELECT user_id,first_name, last_name, M.permission_level as permissions FROM
         (
             SELECT user_id as member_id, permission_level FROM Memberships 
             WHERE class_id = %s {"" if (Permissions.CAN_VIEW_HIDDEN in perms) else "AND visibility = 1"}
@@ -324,9 +401,77 @@ def intToJoinCode(number):
         code+=values[remainder]
     return code
 
-#Creation Queries
-@users.route("/createClass/<session_key>/<class_name>/<class_description>/<organization>")
-def create_class(session_key,class_name,class_description,organization):
+@users.route("/joinClass/<session_key>/<class_code>")
+def join_class(session_key,class_code):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (len(class_code) != 8):
+        return respond("",CODE_INVALID_FORMAT)
+    
+    query = """
+    SELECT class_id FROM Classes WHERE join_code = %s
+    """
+    cursor.execute(query,(class_code))
+    match = cursor.fetchall()
+    if (len(match) == 0):
+        return respond("",CODE_ACCESS_DENIED)
+    class_id = match[0]["class_id"]
+
+    query = '''
+        INSERT INTO Memberships (user_id,class_id,permission_level,visibility) VALUES
+        (%s,%s,%s,%s)
+    '''
+
+    cursor.execute(query,(user_id,class_id,0,1))
+
+    database.get_db().commit()
+
+    return respond("",200)
+
+def removeUserFromClass(class_id,user_id):
+    cursor = database.get_db().cursor()
+    query  = '''
+    DELETE FROM Memberships WHERE class_id = %s AND user_id = %s
+    '''
+    cursor.execute(query,(class_id,user_id))
+    database.get_db().commit()
+
+@users.route("/leaveClass/<session_key>/<class_id>",methods = ["DELETE"])
+def leave_class(session_key,class_id):
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    removeUserFromClass(class_id,user_id)
+    return respond("",CODE_SUCCESS)
+
+@users.route("/removeUser/<session_key>/<class_id>/<user_id>",methods = ["DELETE"])
+def force_leave_class(session_key,class_id,target_id):
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.CAN_REMOVE_STUDENT):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    removeUserFromClass(class_id,target_id)
+    return respond("",CODE_SUCCESS)
+
+@users.route("/createClass/<session_key>",methods=["POST"])
+def create_class(session_key):
+
     cursor = database.get_db().cursor()
 
     user_id = userIDFromSessionKey(session_key)
@@ -350,21 +495,146 @@ def create_class(session_key,class_name,class_description,organization):
         (%s,%s,%s,%s);
     '''
 
-    cursor.execute(query,(class_name,class_description,organization,join_code))
+    args = request.get_json(force=True)
 
-    cursor.execute('SELECT LAST_INSERT_ID()')
-    class_id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
+    if (args.get('class_name',None) == None or args.get('class_description',None) == None or args.get('organization',None) == None):
+        return respond("",CODE_INVALID_FORMAT)
+    
+    cursor.execute(query,(args['class_name'],args['class_description'],args['organization'],join_code))
+
+    cursor.execute('SELECT LAST_INSERT_ID();')
+    class_id = cursor.fetchall()[0]['LAST_INSERT_ID()']
 
     query = '''
         INSERT INTO Memberships (user_id,class_id,permission_level,visibility) VALUES
         (%s,%s,%s,%s)
     '''
 
-    cursor.execute(query,(user_id,class_id,16,1))
+    cursor.execute(query,(user_id,class_id,0b1111111111111111,1))
 
     database.get_db().commit()
 
-    return respond(str(class_id),200)
+    return respond(class_id,200)
 
+@users.route("/modifyAssignment/<session_key>/<class_id>/<assignment_id>",methods=["POST","PUT","DELETE"])
+def create_update_delete_assignment(session_key,class_id,assignment_id):
+    cursor = database.get_db().cursor()
 
+    user_id = userIDFromSessionKey(session_key)
 
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.get("CAN_MANAGE_ASSIGNMENTS",False)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    args = request.get_json(force = True)
+
+    if (request.method == "POST"):
+        query = '''
+        INSERT INTO Assignments (class_id,name,due_date,overall_weight) VALUES
+        (%s,%s,%s,%s)
+        '''
+        cursor.execute(query,(
+            class_id,
+            args.get("name","Untitled"),
+            args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
+            args.get("overall_weight",1)
+        ))
+
+        database.get_db().commit()
+
+        cursor.execute('SELECT LAST_INSERT_ID()')
+        id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
+
+        return respond(str(id),CODE_SUCCESS)
+    
+    if (request.method == "PUT"):
+        query = '''
+        UPDATE Assignments SET
+        name=%s,
+        due_date=%s,
+        overall_weight=%s WHERE assignment_id = %s
+        '''
+        cursor.execute(query,(
+            class_id,
+            args.get("name","Untitled"),
+            args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
+            args.get("overall_weight",1),
+            assignment_id
+        ))
+
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
+
+    if (request.method == "DELETE"):
+        query = '''
+        DELETE Assignments WHERE assignment_id = %s
+        '''
+        cursor.execute(query,(assignment_id))
+
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
+
+@users.route("/comment/<session_key>/<class_id>/<assignment_id>/<student_id>",methods=["GET","POST","PUT","DELETE"])
+def comment(session_key,class_id,assignment_id,student_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+    
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.get("CAN_GRADE_ASSIGNMENTS",False)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    args = request.get_json(force=True)
+    if (request.method == "GET"):
+        query = """
+        SELECT 
+        C.comment_id as comment_id,
+        C.message as message, 
+        C.created_on as created_on,
+        A.first_name AS author_first_name, 
+        A.last_name AS author_last_name 
+        FROM 
+        (
+        SELECT * FROM Comments WHERE 
+        class_id = %s AND
+        assignment_id = %s AND
+        student_id = %s
+        ) as C
+        JOIN Users as A ON A.user_id = C.author_id
+        """
+        cursor.execute(query,(class_id,assignment_id,student_id))
+        result = cursor.fetchall()
+        return respond(jsonify(result),CODE_SUCCESS)
+
+    if (request.method == "POST"):
+        query = '''
+        INSERT INTO Comments (class_id,name,due_date,overall_weight) VALUES
+        (%s,%s,%s,%s)
+        '''
+        cursor.execute(query,(
+            class_id,
+            args.get("name","Untitled"),
+            args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
+            args.get("overall_weight",1)
+        ))
+
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
+    if (request.method == "PUT"):
+        return respond("",CODE_SUCCESS)
+    if (request.method == "DELETE"):
+        return respond("",CODE_SUCCESS)
+
+    

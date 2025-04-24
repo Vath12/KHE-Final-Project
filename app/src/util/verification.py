@@ -1,5 +1,5 @@
 import streamlit as st
-from util.request import safeRequest
+from util.request import safeGet
 import requests
 
 def isValidSession():
@@ -8,7 +8,7 @@ def isValidSession():
     """
     if (st.session_state.get("session_key")==None):
         st.switch_page("Login.py")
-    result = safeRequest(f"http://api:4000/isValidSession/{st.session_state.get('session_key')}")
+    result = safeGet(f"http://api:4000/isValidSession/{st.session_state.get('session_key')}")
     if (result.status_code != 200):
         st.switch_page("Login.py")
     return True

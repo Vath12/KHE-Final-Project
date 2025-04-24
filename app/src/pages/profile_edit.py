@@ -1,6 +1,5 @@
 import streamlit as st
 import logging
-import requests
 from util.verification import isValidSession
 from util.request import *
 
@@ -32,10 +31,15 @@ def edit_profile_page():
             border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-left: 10%; /* Move to the left */
+            margin-right: 10%; /* Optional: limit right margin for balanced appearance */
         }
         .required-asterisk {
             color: #e74c3c;
             margin-left: 3px;
+        }
+        .stTextInput, .stTextArea {
+            margin-bottom: 15px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -43,12 +47,12 @@ def edit_profile_page():
     # Sidebar Navigation
     with st.sidebar:
         if st.button("Home"):
-            st.switch_page("home.py")
+            st.switch_page("pages/home.py")
         if st.button("Profile"):
             st.switch_page("pages/profile_display.py")
         if st.button("Logout"):
             st.session_state.clear()
-            st.switch_page("home.py")
+            st.switch_page("pages/home.py")
 
     # Main Content
     st.title("Edit Profile")
@@ -70,7 +74,7 @@ def edit_profile_page():
                     key="edit_last_name"
                 )
                 username = st.text_input(
-                    "Username",
+                    "Username (cannot be changed)",
                     value=user_info['username'],
                     disabled=True,
                     help="Username cannot be changed"
@@ -78,7 +82,7 @@ def edit_profile_page():
                 
             with cols[1]:
                 email = st.text_input(
-                    "Email",
+                    "Email (not required)",
                     value=user_info['email'],
                     key="edit_email"
                 )
@@ -113,11 +117,11 @@ def edit_profile_page():
                 )
             with col2:
                 if st.form_submit_button("Cancel", use_container_width=True):
-                    st.switch_page("pages/Profile.py")
+                    st.switch_page("pages/profile_display.py")
 
         # Handle form submission
         if submitted:
-            if not all([first_name, email]):
+            if not first_name:
                 st.error("Please fill in all required fields")
                 st.stop()
                 
@@ -127,26 +131,17 @@ def edit_profile_page():
                 
             # Update user data via API
             try:
-                update_data = {
-                    "session_key": st.session_state.session_key,
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "email": email,
-                    "bio": bio
-                }
-                if new_password:
-                    update_data["password"] = new_password
-                
-                response = requests.post(
-                    "http://api:4000/updateUser",
-                    json=update_data
+
+                setUserInfo(
+                    first_name =  None if (first_name == "") else first_name,
+                    last_name =  None if (last_name == "") else last_name,
+                    email = None if (email == "") else email,
+                    bio = None if (bio == "") else bio,
+                    password=  None if (new_password == "") else new_password
                 )
                 
-                if response.status_code != 200:
-                    raise Exception(response.json().get('error', 'Update failed'))
-                
                 st.success("Profile updated successfully!")
-                st.switch_page("pages/Profile.py")
+                st.switch_page("pages/profile_display.py")
                 
             except Exception as e:
                 st.error(f"Update failed: {str(e)}")
