@@ -263,10 +263,9 @@ def createClass(class_name,class_description,organization) -> int:
 
 def createAssignment(class_id,name,due,weight):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
-    assignment_id
+    assignment_id on Success, None on Failure
     """
     data = {
      'name' : name,
@@ -278,7 +277,6 @@ def createAssignment(class_id,name,due,weight):
 
 def updateAssignmnet(class_id,assignment_id,name,due,weight):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True on success
@@ -293,14 +291,63 @@ def updateAssignmnet(class_id,assignment_id,name,due,weight):
 
 def deleteAssignment(class_id,assignment_id):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True on success
     """
     result = safeDelete(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.status_code == 200
+
+def getAssignmentCriterion(class_id : int, assignment_id : int,criterion_id : int) -> dict:
+    """
+    :rtype: dict
+    :return:
+    {name,value,weight}
+    """
+    result = safeGet(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
+    return result.json().get(0,None)
+
+
+def createAssignmentCriterion(class_id : int, assignment_id : int ,name : str,value : int,weight : float) -> int:
+    """
+    :rtype: bool
+    :return:
+    criterion_id on Success, None on Failure
+    """
+    data = {
+     'name' : name,
+     'value' : value,
+     'weight' : weight
+    }
+    result = safePost(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/-1",data)
+    return result.json().get('criterion_id')
+
+def updateAssignmentCriterion(class_id : int, assignment_id : int, criterion_id : int, name : str,value : int,weight : float) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+     'name' : name,
+     'value' : value,
+     'weight' : weight
+    }
+    result = safePut(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}",data)
+    return result.status_code == 200
+
+def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : int) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
+    return result.status_code == 200
     
+
+
+
 def gradeAssignment(class_id,criterion_id,student_id,grade):
     """
     TODO: IMPLEMENT
