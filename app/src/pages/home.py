@@ -32,26 +32,30 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-if st.sidebar.button("Profile"):
+if st.sidebar.button("Profile",use_container_width=True):
     st.switch_page("pages/profile_display.py")
-if st.sidebar.button("Notifications"):
+if st.sidebar.button("Notifications",use_container_width=True):
     st.switch_page("pages/notification.py")
-if st.sidebar.button("Manage Classes"):
+if st.sidebar.button("Manage Classes",use_container_width=True):
     st.switch_page("pages/manage_classes.py")
 
-# ---------- Create Class Button ----------
-if st.button("Create Class"):
-    st.switch_page("pages/create_classes.py")
 
-# ---------- Page Title ----------
-st.markdown(
-    f"""
-    <div style='font-size: 40px; font-weight: bold; color: #2e86de;'>
-        Welcome {userInfo['first_name']} {userInfo['last_name']}
-    <p style='font-size: 18px; color: #555;'>Click on course to view details</p>
-    """,
-    unsafe_allow_html=True
-)
+
+cols = st.columns([4,1])
+with cols[0]:
+    # ---------- Page Title ----------
+    st.markdown(
+        f"""
+        <div style='font-size: 40px; font-weight: bold; color: #2e86de;'>
+            Welcome {userInfo['first_name']} {userInfo['last_name']}
+        <p style='font-size: 18px; color: #555;'>Click on a course to view details</p>
+        """,
+        unsafe_allow_html=True
+    )
+with cols[1]:
+    # ---------- Create Class Button ----------
+    if st.button("Create Class"):
+        st.switch_page("pages/create_classes.py")
 
 # ---------- Class Cards Layout ----------
 cols = st.columns(3)
@@ -60,3 +64,6 @@ for i in range(len(classes)):
     with cols[i % 3]:
         if st.button(classes[i]["name"], key=1888888 + i, use_container_width=True):
             st.switch_page("pages/classes.py")
+
+
+
