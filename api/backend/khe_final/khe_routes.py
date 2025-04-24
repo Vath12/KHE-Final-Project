@@ -419,7 +419,7 @@ def join_class(session_key,class_code):
     match = cursor.fetchall()
     if (len(match) == 0):
         return respond("",CODE_ACCESS_DENIED)
-    class_id = match[0].class_id
+    class_id = match[0]["class_id"]
 
     query = '''
         INSERT INTO Memberships (user_id,class_id,permission_level,visibility) VALUES
