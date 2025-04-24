@@ -1,8 +1,15 @@
 import streamlit as st
 from util.request import getUserInfo, createClass, createAssignment  
+from util.verification import isValidSession
 
 # ---------- Page Setup ----------
 st.set_page_config(page_title="Create Class", layout="centered")
+ # Authentication check
+try:
+    isValidSession()
+except Exception as e:
+    st.error("Session validation failed")
+    st.stop()
 
 # ---------- Page Title ----------
 st.markdown(
@@ -14,7 +21,7 @@ st.markdown("<hr>", unsafe_allow_html=True)
 
 # ---------- Input Fields ----------
 class_name = st.text_input("Class Name", max_chars=100)
-class_description = st.text_area("Syllabus / Description", height=200)
+class_description = st.text_area("Description", height=200)
 organization = st.text_input("Organization", max_chars=100)
 
 # ---------- Home Button ----------
