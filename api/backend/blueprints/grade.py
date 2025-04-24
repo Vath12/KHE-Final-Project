@@ -8,6 +8,34 @@ from backend.blueprints.util import *
 
 grades = Blueprint('grades', __name__)
 
+@grades.route('/grades/<session_key>/<class_id>/<assignment_id>',methods = ["GET"])
+def get_grades(session_key,class_id,assignment_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.get("CAN_GRADE_ASSIGNMENT",False)):
+        return respond("",CODE_ACCESS_DENIED)
+        
+    query = f'''
+        SELECT 
+        G.student_id as sid,
+        AC.criterion_id as cid,
+        G.grade
+        FROM Grades as G JOIN 
+        (SELECT * FROM AssignmentCriteria WHERE assignment_id = %s) as AC ON AC.criterion_id = G.assignment_criterion_id
+    '''
+    cursor.execute(query,(assignment_id))
+    result = cursor.fetchall()
+    return respond(jsonify(result),CODE_SUCCESS)
+    
 @grades.route('/grade/<session_key>/<class_id>/<assignment_id>/<student_id>',methods = ["GET","PUT","POST","DELETE"])
 def grade(session_key,class_id,assignment_id,student_id):
     cursor = database.get_db().cursor()
@@ -26,7 +54,7 @@ def grade(session_key,class_id,assignment_id,student_id):
     else:
         if (not isClassMember(student_id,class_id)):
             return respond("",CODE_ACCESS_DENIED)
-        if (not perms.get("CAN_GRADE_ASSIGNMENTS",False)):
+        if (not perms.get("CAN_GRADE_ASSIGNMENT",False)):
             return respond("",CODE_ACCESS_DENIED)
         
     if (request.method == "GET"):
@@ -44,7 +72,7 @@ def grade(session_key,class_id,assignment_id,student_id):
         result = cursor.fetchall()
         return respond(jsonify(result),CODE_SUCCESS)
     
-    if (not perms.get("CAN_GRADE_ASSIGNMENTS",False)):
+    if (not perms.get("CAN_GRADE_ASSIGNMENT",False)):
         return respond("",CODE_ACCESS_DENIED)
 
     if (request.method == "DELETE"):
