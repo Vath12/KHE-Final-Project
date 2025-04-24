@@ -106,4 +106,75 @@ def create_update_delete_assignment(session_key,class_id,assignment_id):
         database.get_db().commit()
         return respond("",CODE_SUCCESS)
 
+assignmentCriteria = Blueprint('assignmentCriteria', __name__)
+
+@assignmentCriteria.route("/assignmentCriteria/<session_key>/<class_id>/<assignment_id>/<criterion_id>",methods=["GET","POST","PUT","DELETE"])
+def crud_assignment_criterion(session_key,class_id,assignment_id,criterion_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    if (not isClassMember(user_id,class_id)):
+        return respond("",CODE_ACCESS_DENIED)
     
+    perms = getUserClassPermissions(user_id,class_id)
+
+    if (not perms.get("CAN_MANAGE_ASSIGNMENTS",False)):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    args = request.get_json(force = True)
+
+    if (request.method == "GET"):
+        query = '''
+            SELECT name,value,weight FROM AssignmentCriteria WHERE criterion_id = %s
+        '''
+        cursor.execute(query,(criterion_id))
+        result = cursor.fetchall()
+        return respond(jsonify(result),CODE_SUCCESS)
+    if (request.method == "POST"):
+        query = '''
+            INSERT INTO AssignmentCriteria (class_id,assignment_id,name,value,weight) Value
+            (%s,%s,%s,%s,%s)
+        '''
+        cursor.execute(query,(
+            class_id,
+            assignment_id,
+            args.get("name","Untitled"),
+            args.get("value",0),
+            args.get("weight",1.0)
+        ))
+        database.get_db().commit()
+
+        cursor.execute('SELECT LAST_INSERT_ID()')
+        id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
+
+        return respond(jsonify({'criterion_id':id}),CODE_SUCCESS)
+    #the class_id seems redundant but it prevents people from just randomly updating criterion_ids from
+    #classes they don't belong to
+    if (request.method == "PUT"):
+        query = '''
+            UPDATE AssignmentCriteria SET 
+            name = %s,
+            value = %s,
+            weight = %s
+            WHERE 
+            criterion_id = %s AND class_id = %s
+        '''
+        cursor.execute(query,(
+            args.get("name","Untitled"),
+            args.get("value",0),
+            args.get("weight",1.0),
+            criterion_id,
+            class_id
+        ))
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
+    if (request.method == "DELETE"):
+        query = '''
+            DELETE FROM AssignmentCriteria WHERE criterion_id = %s AND class_id = %s
+        '''
+        cursor.execute(query,(criterion_id,class_id))
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)

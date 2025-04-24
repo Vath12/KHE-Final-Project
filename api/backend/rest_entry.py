@@ -1,6 +1,6 @@
 from flask import Flask
 from backend.db_connection import db
-from backend.blueprints.assignment import assignments
+from backend.blueprints.assignment import assignments,assignmentCriteria
 from backend.blueprints.user import users
 from backend.blueprints.course import classes
 from backend.blueprints.comment import comments
@@ -45,6 +45,7 @@ def create_app():
     #app.register_blueprint(simple_routes)
     app.register_blueprint(users)
     app.register_blueprint(assignments)
+     app.register_blueprint(assignmentCriteria)
     app.register_blueprint(classes)
     app.register_blueprint(comments)
     app.register_blueprint(notifications)
