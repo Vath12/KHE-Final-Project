@@ -44,21 +44,24 @@ if (class_info.get("join_code") != None):
 canViewRoster = permissions.get("CAN_VIEW_ROSTER", False)
 
 # Section buttons
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)  # Add an extra column for the 'Create' button
 with col1:
-    if st.button("Assignments",use_container_width=True):
+    if st.button("Assignments", use_container_width=True):
         st.session_state.selected_section = "assignments"
 with col2:
-    if st.button("Announcements",use_container_width=True):
-        st.session_state.selected_section = "announcements"
+    if st.button("Create", use_container_width=True):  # Create button next to Assignments
+        st.session_state.selected_section = "create"
 with col3:
-    if st.button("Grades",use_container_width=True):
-        st.session_state.selected_section = "grades"
-if (canViewRoster):
-    with col4:
-        if st.button("View Class Roster",use_container_width=True):
+    if st.button("Announcements", use_container_width=True):
+        st.session_state.selected_section = "announcements"
+with col4:
+    if st.button("Grades", use_container_width=True):
+        st.switch_page("pages/join_classes.py")
+if canViewRoster:
+    with col5:
+        if st.button("View Class Roster", use_container_width=True):
             st.session_state.selected_section = "roster"
-    
+
 st.markdown("---")
 
 # Display content based on section
@@ -260,7 +263,7 @@ elif st.session_state.selected_section == "roster":
         for student in class_roster:
             with st.expander(f"{student['first_name']} {student['last_name']}"):
                 for k in permissionMap.keys():
-                    st.checkbox(k,key=f"{student['user_id']}.{k}")
+                    st.checkbox(k, key=f"{student['user_id']}.{k}")
     
     st.markdown("</div>", unsafe_allow_html=True)
 
