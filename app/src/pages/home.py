@@ -36,8 +36,8 @@ if st.sidebar.button("Profile",use_container_width=True):
     st.switch_page("pages/profile_display.py")
 if st.sidebar.button("Notifications",use_container_width=True):
     st.switch_page("pages/notification.py")
-if st.sidebar.button("Manage Classes",use_container_width=True):
-    st.switch_page("pages/manage_classes.py")
+if st.sidebar.button("Join Class",use_container_width=True):
+    st.switch_page("pages/join_classes.py")
 
 
 
