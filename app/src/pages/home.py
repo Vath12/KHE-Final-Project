@@ -2,6 +2,7 @@ import streamlit as st
 from util.verification import isValidSession
 from util.request import *
 
+# Authentication check
 isValidSession()
 
 userInfo = getUserInfo()
@@ -55,6 +56,10 @@ if st.sidebar.button("Notifications", use_container_width=True):
     st.switch_page("pages/notification.py")
 if st.sidebar.button("Join Class", use_container_width=True):
     st.switch_page("pages/join_classes.py")
+
+# Add Logout button
+if st.sidebar.button("Logout", use_container_width=True):
+    st.switch_page("Login.py")  # Redirect to Login page
 
 # Show "Leave Classes" under "Join Class" only if user is in non-instructor classes
 non_instructor_classes = [
