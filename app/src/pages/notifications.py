@@ -14,8 +14,9 @@ def notifications_page():
 
     # Sidebar
     with st.sidebar:
-        # "Home" button filling the column
-        st.button("Home", use_container_width=True)
+        # "Home" button that switches to the homepage
+        if st.button("Home"):
+            st.switch_page("pages/home")  # Switch to the homepage page
 
     # Custom CSS for layout adjustments
     st.markdown("""
@@ -36,11 +37,6 @@ def notifications_page():
             flex-direction: column;
             align-items: center;
         }
-        .toggle-switch {
-            margin-top: -20px;  /* Move the toggle switch closer to the title */
-            margin-left: -30px;  /* Move toggle switch further left */
-            margin-bottom: 1.5rem;  /* Reduced bottom margin to keep it closer to the title */
-        }
         .notif-box {
             background-color: #f8f9fa;
             padding: 1.5rem 2rem;
@@ -48,7 +44,7 @@ def notifications_page():
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             max-width: 600px;
             width: 100%;
-            text-align: center;
+            text-align: left;
             position: relative;
             margin-bottom: 1rem;  /* Add space between notifications */
         }
@@ -72,25 +68,33 @@ def notifications_page():
     # Main content area
     st.markdown("<div class='centered-container'>", unsafe_allow_html=True)
     
-    # Toggle switch right below the title, closer and more to the left
-    st.markdown("<div class='toggle-switch'>", unsafe_allow_html=True)
-    notifications_enabled = st.toggle("Receive Notifications", value=True)
-    st.session_state['notifications_enabled'] = notifications_enabled
-    st.markdown("</div>", unsafe_allow_html=True)
-
     # Fetch notifications
     notifications = getNotifications()
 
     if notifications:
+        selected_notifications = []
+
         for notification in notifications:
-            # Display each notification with delete button
+            # Extract details from the notification
+            notification_date = notification.get('notification_date', 'Date not available')
+            assignment_name = notification.get('assignment_name', 'Assignment name not available')
+            class_name = notification.get('class_name', 'Class name not available')
+            assignment_id = notification.get('assignment_id', 'ID not available')
+
+            # Display each notification with a checkbox
+            message = f"Your assignment '{assignment_name}' for class '{class_name}' was graded on {notification_date}."
+
             with st.container():
-                st.markdown(f"<div class='notif-box'>{notification['message']}", unsafe_allow_html=True)
-                # "Delete" button for deleting the notification
-                if st.button("Delete", key=notification['id'], help="Delete Notification"):
-                    removeNotifications(notification['id'])  # Remove the notification
-                    st.experimental_rerun()  # Refresh the page to reflect the update
-                st.markdown("</div>", unsafe_allow_html=True)
+                # Checkbox for selecting notification
+                if st.checkbox(f"Select to delete: {message}", key=assignment_id):
+                    selected_notifications.append(assignment_id)
+
+        # Button to delete selected notifications
+        if st.button("Delete Selected Notifications"):
+            for assignment_id in selected_notifications:
+                removeNotifications(assignment_id)  # Remove the notification using the assignment ID
+            st.success("Selected notifications have been deleted.")
+            st.experimental_rerun()  # Refresh the page to reflect the update
 
     else:
         st.write("You don't have any notifications yet.")
