@@ -235,7 +235,7 @@ def createClass(class_name,class_description,organization) -> int:
      'organization' : organization
     }
     result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",data)
-    return int(result.content)
+    return result.json().get('class_id')
 
 def createAssignment(class_id,name,due,weight):
     """
@@ -250,7 +250,7 @@ def createAssignment(class_id,name,due,weight):
      'overall_weight' : weight
     }
     result = safePost(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/-1",data)
-    return int(result.content)
+    return result.json().get('assignment_id')
 
 def updateAssignmnet(class_id,assignment_id,name,due,weight):
     """
