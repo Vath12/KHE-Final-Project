@@ -51,7 +51,7 @@ with col1:
 with col2:
     if canManageAssignments:  # Only show "Create" button for those with CAN_MANAGE_ASSIGNMENTS permission
         if st.button("Create", use_container_width=True):
-            st.switch_page(f"pages/assignments")
+            st.switch_page(f"pages/assignments.py")
 
 with col3:
     if st.button("Announcements", use_container_width=True):

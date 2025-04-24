@@ -12,11 +12,6 @@ except Exception as e:
 # ---------- Page Setup ----------
 st.set_page_config(page_title="Create Assignment", layout="centered")
 
-# Get the class ID from session state or URL parameters
-class_id = st.session_state.get("class_id")
-if not class_id:
-    st.error("Class ID is missing.")
-    st.stop()
 
 # ---------- Page Title ----------
 st.markdown(
@@ -39,6 +34,9 @@ if st.button("Create Assignment", use_container_width=True):
         st.warning("Please fill out all required fields.")
     else:
         try:
+            # Use the selected class ID from session state
+            class_id = st.session_state.selected_class_id
+            
             # Create the assignment using the provided function
             assignment_id = createAssignment(class_id, assignment_name, due_date, weight)
 
@@ -46,12 +44,12 @@ if st.button("Create Assignment", use_container_width=True):
             st.success(f"Assignment '{assignment_name}' created successfully!")
 
             # Redirect back to the class page
-            st.session_state["assignment_created"] = True  # Optionally track if assignment was created
-            st.switch_page(f"pages/classes.py")  # Assuming the class page is the destination
+            st.session_state["assignment_created"] = True 
+            st.switch_page(f"pages/classes.py")  #
 
         except Exception as e:
             st.error(f"Failed to create assignment: {e}")
 
 # ---------- Back Button ----------
 if st.button("Back to Class", use_container_width=True):
-    st.switch_page(f"pages/classes.py")  # Go back to the class page
+    st.switch_page(f"pages/classes.py")  # Go back to_
