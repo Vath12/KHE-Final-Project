@@ -77,6 +77,54 @@ def setUserInfo(first_name=None,last_name=None,bio = None,password = None,email 
     result = safePost(f"{API}/userinfo/{st.session_state.get('session_key')}",data)
     return result.status_code == 200
 
+def getUserProfileLinks() -> list[dict]:
+    """
+    platform_ids:\n
+    0 LINKEDIN\n
+    1 SNAPCHAT\n
+    2 INSTAGRAM\n
+    3 DISCORD\n
+    4 GITHUB\n
+    5 FACEBOOK\n
+    :rtype: list[dict]
+    :return:
+    [{platform_id,link}]
+    """
+    result = safeGet(f"{API}/userProfileLink/{st.session_state.get('session_key')}/-1")
+    return result.json()
+
+def addUserProfileLink(platform : int,link : str) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    data = {
+        "link" : link
+    }
+    result = safePost(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",data)
+    return result.status_code == 200
+
+def updateUserProfileLink(platform : int,link : str) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    data = {
+        "link" : link
+    }
+    result = safePut(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",data)
+    return result.status_code == 200
+
+def removeUserProfileLink(platform : int) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    result = safeDelete(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",{})
+    return result.status_code == 200
 
 def getClassList() -> list[dict]:
     """
