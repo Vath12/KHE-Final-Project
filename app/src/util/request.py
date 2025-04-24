@@ -148,6 +148,37 @@ def getClassPermissions(class_id : int) -> dict:
     result = safeGet(f"{API}/classPermissions/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
+def setClassPermissions(
+        class_id : int,
+        target_user_id : int,
+        CAN_VIEW_ROSTER : bool,
+        CAN_MANAGE_ASSIGNMENTS : bool,
+        CAN_GRADE_ASSIGNMENT : bool,
+        CAN_REMOVE_STUDENT : bool,
+        CAN_EDIT_COURSE : bool,
+        IS_INSTRUCTOR : bool,
+        CAN_VIEW_HIDDEN : bool,
+        IS_VISIBLE : bool
+) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+        'user_id' : target_user_id,
+        'CAN_VIEW_ROSTER' : CAN_VIEW_ROSTER,
+        'CAN_MANAGE_ASSIGNMENTS' : CAN_MANAGE_ASSIGNMENTS,
+        'CAN_GRADE_ASSIGNMENT' : CAN_GRADE_ASSIGNMENT,
+        'CAN_REMOVE_STUDENT' : CAN_REMOVE_STUDENT,
+        'CAN_EDIT_COURSE' : CAN_EDIT_COURSE,
+        'IS_INSTRUCTOR' : IS_INSTRUCTOR,
+        'CAN_VIEW_HIDDEN' : CAN_VIEW_HIDDEN,
+        'IS_VISIBLE' : IS_VISIBLE,
+    }
+    result = safePost(f"{API}/classPermissions/{st.session_state.get('session_key')}",data)
+    return result.status_code == 200
+
 def getClassRoster(class_id : int) -> list[dict]:
     """
     :rtype: list[dict]

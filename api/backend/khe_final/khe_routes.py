@@ -155,7 +155,6 @@ def get_user_info(session_key):
                 SET {set_clause} 
                 WHERE user_id = {user_id}
             '''
-            log(query)
             cursor.execute(query,data)
             database.get_db().commit()
         
@@ -201,14 +200,58 @@ def getUserClassPermissions(user_id,class_id):
     }
     return result
 
-@users.route('/classPermissions/<session_key>/<class_id>')
-def get_class_permissions(session_key,class_id):
+@users.route('/classPermissions/<session_key>/<class_id>',methods = ["GET","POST"])
+def class_permissions(session_key,class_id):
+    cursor = database.get_db().cursor()
     user_id = userIDFromSessionKey(session_key)
-
+    
     if (user_id == -1 or not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
-   
-    return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+    
+    if (request.method == "GET"):
+        return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+    
+    if (request.method == "POST"):
+
+        perms  = getUserClassPermissions(user_id,class_id)
+
+        if (not perms.get('CAN_EDIT_COURSE')):
+            return respond("",CODE_ACCESS_DENIED)
+            
+        args = request.get_json(force=True)
+
+        flags = Permissions(0)
+
+        target_id = args.get("user_id")
+        if (target_id == None):
+            return respond("",CODE_INVALID_FORMAT)
+        
+        if (args.get('CAN_VIEW_ROSTER')):
+            flags |= Permissions.CAN_VIEW_ROSTER
+        if (args.get('CAN_MANAGE_ASSIGNMENTS')):
+            flags |= Permissions.CAN_MANAGE_ASSIGNMENTS
+        if (args.get('CAN_GRADE_ASSIGNMENT')):
+            flags |= Permissions.CAN_GRADE_ASSIGNMENT
+        if (args.get('CAN_REMOVE_STUDENT')):
+            flags |= Permissions.CAN_REMOVE_STUDENT
+        if (args.get('CAN_EDIT_COURSE')):
+            flags |= Permissions.CAN_EDIT_COURSE
+        if (args.get('IS_INSTRUCTOR')):
+            flags |= Permissions.IS_INSTRUCTOR
+        if (args.get('CAN_VIEW_HIDDEN')):
+            flags |= Permissions.CAN_VIEW_HIDDEN
+        
+        query = f'''
+            UPDATE Memberships
+            SET permission_level = {int(flags)}, visibility = {1 if args.get('IS_VISIBLE') == True else 0}
+            WHERE user_id = {target_id}
+        '''
+        log(query)
+        cursor.execute(query)
+        database.get_db().commit()
+
+        return respond("",CODE_SUCCESS)
+
 
 @users.route('/classinfo/<session_key>/<class_id>')
 def getClassInfo(session_key,class_id):
