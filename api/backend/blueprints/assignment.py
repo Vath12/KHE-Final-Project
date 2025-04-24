@@ -36,7 +36,7 @@ def get_assignment_details(session_key,class_id,assignment_id):
     if (not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     query = '''
-        SELECT name,value,weight FROM AssignmentCriteria WHERE class_id = %s AND assignment_id = %s
+        SELECT criterion_id,name,value,weight FROM AssignmentCriteria WHERE class_id = %s AND assignment_id = %s
     '''
     success = cursor.execute(query,(class_id,assignment_id))
     result = cursor.fetchall()

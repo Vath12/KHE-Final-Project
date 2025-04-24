@@ -128,7 +128,7 @@ def getAssignmentDetails(class_id : int,assignment_id : int) -> list[dict]:
     """
     :rtype: list[dict]
     :return:
-    [{name,value,weight}]
+    [{criterion_id,name,value,weight}]
     """
     result = safeGet(f"{API}/assignmentDetails/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
