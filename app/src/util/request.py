@@ -194,7 +194,7 @@ def getClassRoster(class_id : int) -> list[dict]:
     """
     :rtype: list[dict]
     :return:
-    [{first_name,last_name}]
+    [{user_id,first_name,last_name,permissions}]
     """
     result = safeGet(f"{API}/classRoster/{st.session_state.get('session_key')}/{class_id}")
     return result.json()

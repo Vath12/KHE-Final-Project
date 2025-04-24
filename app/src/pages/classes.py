@@ -249,8 +249,18 @@ elif st.session_state.selected_section == "roster":
     if not class_roster:
         st.markdown("<p>No roster available for this course.</p>", unsafe_allow_html=True)
     else:
+        permissionMap = {
+            'View Roster':'CAN_VIEW_ROSTER',
+            'Manage Assignments':'CAN_MANAGE_ASSIGNMENTS',
+            'Grade Assignments':'CAN_GRADE_ASSIGNMENT',
+            'Remove Students':'CAN_REMOVE_STUDENT',
+            'Edit Course':'CAN_EDIT_COURSE',
+            'View Hidden Members':'CAN_VIEW_HIDDEN',
+        }
         for student in class_roster:
-            st.write(f"{student['first_name']} {student['last_name']}")
+            with st.expander(f"{student['first_name']} {student['last_name']}"):
+                for k in permissionMap.keys():
+                    st.checkbox(k,key=f"{student['user_id']}.{k}")
     
     st.markdown("</div>", unsafe_allow_html=True)
 

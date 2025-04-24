@@ -290,7 +290,7 @@ def get_class_roster(session_key,class_id):
         return respond("",CODE_ACCESS_DENIED)
     
     query = f'''
-        SELECT first_name, last_name, M.permission_level FROM
+        SELECT user_id,first_name, last_name, M.permission_level as permissions FROM
         (
             SELECT user_id as member_id, permission_level FROM Memberships 
             WHERE class_id = %s {"" if (Permissions.CAN_VIEW_HIDDEN in perms) else "AND visibility = 1"}
@@ -514,7 +514,7 @@ def create_class(session_key):
 
     database.get_db().commit()
 
-    return respond(str(class_id),200)
+    return respond(class_id,200)
 
 @users.route("/modifyAssignment/<session_key>/<class_id>/<assignment_id>",methods=["POST","PUT","DELETE"])
 def create_update_delete_assignment(session_key,class_id,assignment_id):
