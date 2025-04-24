@@ -22,11 +22,8 @@ col_left, col_right = st.columns([6, 1])
 
 with col_left:
     st.markdown(f"<p style='font-size: 1em;'>{class_info['organization']}</p>", unsafe_allow_html=True)
-
     st.markdown(f"<p style='color: #7F27FF; font-size: 2.5em;'>{class_info['name']}</p>", unsafe_allow_html=True)
-
     st.markdown(f"<p style='font-size: 1em;'>{class_info['description']}</p>", unsafe_allow_html=True)
-
 
 with col_right:
     if st.button("Home", use_container_width=True):
@@ -38,26 +35,33 @@ st.write("")
 if "selected_section" not in st.session_state:
     st.session_state.selected_section = "overview"
 
-if (class_info.get("join_code") != None):
+if class_info.get("join_code") is not None:
     st.markdown(f"<p style='color: #0066FF;'>Join Code: {class_info['join_code']}</p>", unsafe_allow_html=True)
 
 canViewRoster = permissions.get("CAN_VIEW_ROSTER", False)
+canManageAssignments = permissions.get("CAN_MANAGE_ASSIGNMENTS", False)
 
 # Section buttons
 col1, col2, col3, col4, col5 = st.columns(5)  # Add an extra column for the 'Create' button
+
 with col1:
     if st.button("Assignments", use_container_width=True):
         st.session_state.selected_section = "assignments"
+
 with col2:
-    if st.button("Create", use_container_width=True):  # Create button next to Assignments
-        st.session_state.selected_section = "create"
+    if canManageAssignments:  # Only show "Create" button for those with CAN_MANAGE_ASSIGNMENTS permission
+        if st.button("Create", use_container_width=True):
+            st.switch_page(f"pages/assignments")
+
 with col3:
     if st.button("Announcements", use_container_width=True):
         st.session_state.selected_section = "announcements"
+
 with col4:
     if st.button("Grades", use_container_width=True):
-        st.switch_page("pages/join_classes.py")
-if canViewRoster:
+        st.session_state.selected_section = "grades"
+
+if canViewRoster or canManageAssignments:  # Show "View Class Roster" button if the user has the permission
     with col5:
         if st.button("View Class Roster", use_container_width=True):
             st.session_state.selected_section = "roster"
@@ -239,33 +243,33 @@ elif st.session_state.selected_section == "grades":
 
 elif st.session_state.selected_section == "roster":
     # Display the class roster at the bottom after it is clicked
-    class_roster = getClassRoster(st.session_state.selected_class_id)
-    
-    st.markdown(
-        """
-        <div style='padding: 1rem; background-color: #FFF6D1; border-left: 8px solid #FFC700; border-radius: 8px;'>
-            <h3>Class Roster</h3>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    if not class_roster:
-        st.markdown("<p>No roster available for this course.</p>", unsafe_allow_html=True)
+    if canViewRoster or canManageAssignments:  # Show only if user has the correct permission
+        class_roster = getClassRoster(st.session_state.selected_class_id)
+        
+        st.markdown(
+            """
+            <div style='padding: 1rem; background-color: #FFF6D1; border-left: 8px solid #FFC700; border-radius: 8px;'>
+                <h3>Class Roster</h3>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        if not class_roster:
+            st.markdown("<p>No roster available for this course.</p>", unsafe_allow_html=True)
+        else:
+            permissionMap = {
+                'View Roster':'CAN_VIEW_ROSTER',
+                'Manage Assignments':'CAN_MANAGE_ASSIGNMENTS',
+                'Grade Assignments':'CAN_GRADE_ASSIGNMENT',
+                'Remove Students':'CAN_REMOVE_STUDENT',
+                'Edit Course':'CAN_EDIT_COURSE',
+                'View Hidden Members':'CAN_VIEW_HIDDEN',
+            }
+            for student in class_roster:
+                with st.expander(f"{student['first_name']} {student['last_name']}"):
+                    for k in permissionMap.keys():
+                        st.checkbox(k, key=f"{student['user_id']}.{k}")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     else:
-        permissionMap = {
-            'View Roster':'CAN_VIEW_ROSTER',
-            'Manage Assignments':'CAN_MANAGE_ASSIGNMENTS',
-            'Grade Assignments':'CAN_GRADE_ASSIGNMENT',
-            'Remove Students':'CAN_REMOVE_STUDENT',
-            'Edit Course':'CAN_EDIT_COURSE',
-            'View Hidden Members':'CAN_VIEW_HIDDEN',
-        }
-        for student in class_roster:
-            with st.expander(f"{student['first_name']} {student['last_name']}"):
-                for k in permissionMap.keys():
-                    st.checkbox(k, key=f"{student['user_id']}.{k}")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-elif st.session_state.selected_section == "no_roster_permission":
-    st.write("You do not have permission to view the class roster.")
+        st.write("You do not have permission to view the class roster.")
