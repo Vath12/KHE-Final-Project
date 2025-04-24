@@ -534,7 +534,7 @@ def create_update_delete_assignment(session_key,class_id,assignment_id):
     
     args = request.get_json(force = True)
 
-    if (request.method == "PUT"):
+    if (request.method == "POST"):
         query = '''
         INSERT INTO Assignments (class_id,name,due_date,overall_weight) VALUES
         (%s,%s,%s,%s)
@@ -553,7 +553,7 @@ def create_update_delete_assignment(session_key,class_id,assignment_id):
 
         return respond(str(id),CODE_SUCCESS)
     
-    if (request.method == "POST"):
+    if (request.method == "PUT"):
         query = '''
         UPDATE Assignments SET
         name=%s,

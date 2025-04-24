@@ -252,14 +252,20 @@ def createAssignment(class_id,name,due,weight):
     result = safePost(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/-1",data)
     return int(result.content)
 
-def updateAssignmnet(class_id,assignment_id):
+def updateAssignmnet(class_id,assignment_id,name,due,weight):
     """
     TODO: IMPLEMENT
     :rtype: bool
     :return:
     True on success
     """
-    pass
+    data = {
+     'name' : name,
+     'due_date' : due,
+     'overall_weight' : weight
+    }
+    result = safePut(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}",data)
+    return result.status_code == 200
 
 def deleteAssignment(class_id,assignment_id):
     """
@@ -268,7 +274,8 @@ def deleteAssignment(class_id,assignment_id):
     :return:
     True on success
     """
-    pass
+    result = safeDelete(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    return result.status_code == 200
     
 def gradeAssignment(class_id,criterion_id,student_id,grade):
     """
