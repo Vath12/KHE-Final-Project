@@ -510,7 +510,7 @@ def create_class(session_key):
         (%s,%s,%s,%s)
     '''
 
-    cursor.execute(query,(user_id,class_id,16,1))
+    cursor.execute(query,(user_id,class_id,0b1111111111111111,1))
 
     database.get_db().commit()
 
