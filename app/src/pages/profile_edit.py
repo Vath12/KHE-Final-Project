@@ -32,10 +32,15 @@ def edit_profile_page():
             border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-left: 10%; /* Move to the left */
+            margin-right: 10%; /* Optional: limit right margin for balanced appearance */
         }
         .required-asterisk {
             color: #e74c3c;
             margin-left: 3px;
+        }
+        .stTextInput, .stTextArea {
+            margin-bottom: 15px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -48,7 +53,7 @@ def edit_profile_page():
             st.switch_page("pages/profile_display.py")
         if st.button("Logout"):
             st.session_state.clear()
-            st.switch_page("home.py")
+            st.switch_page("pages/home.py")
 
     # Main Content
     st.title("Edit Profile")
