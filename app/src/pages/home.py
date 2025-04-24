@@ -55,7 +55,7 @@ with cols[0]:
 with cols[1]:
     # ---------- Create Class Button ----------
     if st.button("Create Class"):
-        st.switch_page("pages/create_classes.py")
+        st.switch_page("pages/create_class.py")
 
 # ---------- Class Cards Layout ----------
 cols = st.columns(3)
@@ -63,7 +63,9 @@ cols = st.columns(3)
 for i in range(len(classes)):
     with cols[i % 3]:
         if st.button(classes[i]["name"], key=1888888 + i, use_container_width=True):
+            st.session_state.selected_class_id = classes[i]['class_id']
             st.switch_page("pages/classes.py")
+            
 
 
 

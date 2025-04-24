@@ -26,20 +26,16 @@ if st.button("Create Class", use_container_width=True):
     if not class_name or not class_description or not organization:
         st.warning("Please fill out all fields.")
     else:
-        try:
-            # Attempt to create the class and capture the returned class_id
-            class_id = createClass(class_name, class_description, organization)
-            
-            # Check if the class creation was successful
-            if class_id:
-                # Display success message
-                st.success(f"Class '{class_name}' created successfully with ID: {class_id}")
-                
-                # Redirect to the homepage
-                st.switch_page("pages/home.py")
-            else:
-                st.error("Failed to create the class. Please try again.")
+        # Attempt to create the class and capture the returned class_id
+        class_id = createClass(class_name, class_description, organization)
         
-        except Exception as e:
-            # If there's an error during the API call
-            st.error(f"Failed to create class: {e}")
+        # Check if the class creation was successful
+        if class_id:
+            # Display success message
+            st.success(f"Class '{class_name}' created successfully with ID: {class_id}")
+            
+            # Redirect to the homepage
+            st.switch_page("pages/home.py")
+        else:
+            st.error(f"Failed to create the class. Please try again. {class_id}")
+        

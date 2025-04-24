@@ -6,7 +6,7 @@ isValidSession()
 
 # Get class ID from session state or set a default
 if "selected_class_id" not in st.session_state:
-    st.session_state.selected_class_id = 1  # Default class ID
+    st.switch_page("home.py")
 
 # Get class information
 class_info = getClassInfo(st.session_state.selected_class_id)

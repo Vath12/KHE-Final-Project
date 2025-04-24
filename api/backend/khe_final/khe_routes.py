@@ -497,13 +497,13 @@ def create_class(session_key):
 
     args = request.get_json(force=True)
 
-    if (args.get('class_name') == None or args.get('class_description') == None or args.get('organization') == None):
+    if (args.get('class_name',None) == None or args.get('class_description',None) == None or args.get('organization',None) == None):
         return respond("",CODE_INVALID_FORMAT)
     
-    cursor.execute(query,(args.class_name,args.class_description,args.organization,join_code))
+    cursor.execute(query,(args['class_name'],args['class_description'],args['organization'],join_code))
 
-    cursor.execute('SELECT LAST_INSERT_ID()')
-    class_id = cursor.fetchall()[0]["LAST_INSERT_ID()"]
+    cursor.execute('SELECT LAST_INSERT_ID();')
+    class_id = cursor.fetchall()[0]['LAST_INSERT_ID()']
 
     query = '''
         INSERT INTO Memberships (user_id,class_id,permission_level,visibility) VALUES

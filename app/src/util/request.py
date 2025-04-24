@@ -235,7 +235,7 @@ def createClass(class_name,class_description,organization) -> int:
      'organization' : organization
     }
     result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",data)
-    return int(result.content)
+    return result.content
 
 def createAssignment(class_id,name,due,weight):
     """
