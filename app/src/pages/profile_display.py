@@ -2,7 +2,7 @@ import streamlit as st
 from util.verification import isValidSession
 from util.request import *
 
-def profile_page():
+def profile_display():
     st.set_page_config(page_title="User Profile", layout="wide")
     
     # Authentication check
@@ -15,9 +15,20 @@ def profile_page():
     # Get user data from API
     try:
         user_info = getUserInfo()
+        profile_links = getUserProfileLinks()  # Fetch social media links
     except Exception as e:
         st.error("Failed to load user information")
         st.stop()
+
+    # Platform icons and mapping
+    platform_icons = {
+        0: "assets/link.png",   # LinkedIn
+        1: "assets/snap.png",   # Snapchat
+        2: "assets/insta.png",  # Instagram
+        3: "assets/disc.png",   # Discord
+        4: "assets/hub.png",    # GitHub
+        5: "assets/face.png"    # Facebook
+    }
 
     # Custom CSS styling
     st.markdown("""
@@ -43,6 +54,14 @@ def profile_page():
             margin-bottom: 1rem;
             font-size: 1.1rem;
         }
+        .social-icons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .social-icons img {
+            height: 30px;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -64,6 +83,17 @@ def profile_page():
     st.markdown("<div class='profile-card'>", unsafe_allow_html=True)
     st.header(f"{user_info['first_name']}'s Profile")
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
+    # Social Media Links
+    st.markdown("<div class='social-icons'>", unsafe_allow_html=True)
+    for link in profile_links:
+        platform_id = link['platform_id']
+        url = link['link']
+        if url and url.lower() != "no link":
+            icon_path = platform_icons.get(platform_id)
+            if icon_path:
+                st.markdown(f"<a href='{url}' target='_blank'><img src='/{icon_path}'></a>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # User Information
     cols = st.columns(2)
@@ -92,4 +122,4 @@ def profile_page():
     st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    profile_page()
+    profile_display()
