@@ -149,9 +149,21 @@ def getNotifications() -> list[dict]:
     """
     :rtype: list[dict]
     :return:
-    {notification_date,assignment_name,class_name}
+    {notification_date,assignment_name,class_name,assignment_id}
     """
     result = safeGet(f"{API}/notifications/{st.session_state.get('session_key')}")
+    return result.json()
+
+def removeNotifications(toRemove : list[int]) -> bool:
+    """
+    :rtype: list[dict]
+    :return:
+    True on success
+    """
+    data = {
+        "removeList" : toRemove
+    }
+    result = safeDelete(f"{API}/notifications/{st.session_state.get('session_key')}",data)
     return result.json()
 
 def getAnnouncements(class_id : int) -> list[dict]:
@@ -393,8 +405,6 @@ def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : i
     result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
     return result.status_code == 200
     
-
-
 
 def gradeAssignment(class_id,criterion_id,student_id,grade):
     """
