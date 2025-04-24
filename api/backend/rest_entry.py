@@ -1,7 +1,7 @@
 from flask import Flask
 from backend.db_connection import db
 from backend.blueprints.assignment import assignments,assignmentCriteria
-from backend.blueprints.user import users
+from backend.blueprints.user import users,profileLinks
 from backend.blueprints.course import classes
 from backend.blueprints.comment import comments
 from backend.blueprints.announcement import announcements
@@ -50,6 +50,7 @@ def create_app():
     app.register_blueprint(comments)
     app.register_blueprint(notifications)
     app.register_blueprint(announcements)
+    app.register_blueprint(profileLinks)
     app.register_blueprint(grades)
     os.write(1,bytes(f"Registered blueprints: {app.blueprints}\n","utf-8"))
     # Don't forget to return the app object
