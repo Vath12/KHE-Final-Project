@@ -25,7 +25,7 @@ def get_notifications(session_key):
         success = cursor.execute(query,(user_id))
         result = cursor.fetchall()
         return respond(jsonify(result),CODE_SUCCESS)
-    args = request.json(Force = True)
+    args = request.json(force = True)
     if (request.method == "DELETE"):
         query = '''
            DELETE FROM Notifications WHERE student_id = %s AND assignment_id IN %s
