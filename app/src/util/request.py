@@ -128,19 +128,43 @@ def getAssignmentDetails(class_id : int,assignment_id : int) -> list[dict]:
     """
     :rtype: list[dict]
     :return:
-    [{name,value,weight}]
+    [{criterion_id,name,value,weight}]
     """
     result = safeGet(f"{API}/assignmentDetails/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
 
-def getGrade(class_id : int,assignment_id : int) -> list[dict]:
+def getGrade(class_id : int,assignment_id : int,student_id : int = -1) -> list[dict]:
     """
+    :param3:
+    student_id is optional, by default it returns the grade for the logged in user
     :rtype: list[dict]
     :return:
     [{name,grade,value,weight}]
     """
-    result = safeGet(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    result = safeGet(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}")
     return result.json()
+
+def setGrade(class_id : int,assignment_id : int,criterion_id : int,student_id : int,grade : float) -> bool:
+    """
+    :rtype: list[dict]
+    :return:
+    True if successful
+    """
+    data = {
+        "criterion_id" : criterion_id,
+        "grade" : grade
+    }
+    result = safePut(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.json()
+
+def deleteGrade(class_id : int,assignment_id : int,student_id : int) -> bool:
+    """
+    :rtype: list[dict]
+    :return:
+    True on success
+    """
+    result = safeGet(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}")
+    return result.status_code == 200
 
 def getClassPermissions(class_id : int) -> dict:
     """
@@ -235,7 +259,7 @@ def createClass(class_name,class_description,organization) -> int:
      'organization' : organization
     }
     result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",data)
-    return int(result.content)
+    return result.json().get('class_id')
 
 def createAssignment(class_id,name,due,weight):
     """
@@ -250,7 +274,7 @@ def createAssignment(class_id,name,due,weight):
      'overall_weight' : weight
     }
     result = safePost(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/-1",data)
-    return int(result.content)
+    return result.json().get('assignment_id')
 
 def updateAssignmnet(class_id,assignment_id,name,due,weight):
     """
