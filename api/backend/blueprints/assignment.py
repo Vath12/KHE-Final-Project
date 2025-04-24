@@ -42,30 +42,6 @@ def get_assignment_details(session_key,class_id,assignment_id):
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
-@assignments.route('/grade/<session_key>/<class_id>/<assignment_id>')
-def get_grade(session_key,class_id,assignment_id):
-    cursor = database.get_db().cursor()
-
-    user_id = userIDFromSessionKey(session_key)
-
-    if (user_id == -1):
-        return respond("",CODE_ACCESS_DENIED)
-    if (not isClassMember(user_id,class_id)):
-        return respond("",CODE_ACCESS_DENIED)
-    query = f'''
-        SELECT 
-        AC.name,
-        G.grade,
-        AC.value,
-        AC.weight
-        FROM Grades as G JOIN 
-        (SELECT * FROM AssignmentCriteria WHERE assignment_id = %s) as AC ON AC.criterion_id = G.assignment_criterion_id
-        WHERE G.student_id = %s
-    '''
-    success = cursor.execute(query,(assignment_id,user_id))
-    result = cursor.fetchall()
-    return respond(jsonify(result),CODE_SUCCESS)
-
 @assignments.route("/modifyAssignment/<session_key>/<class_id>/<assignment_id>",methods=["POST","PUT","DELETE"])
 def create_update_delete_assignment(session_key,class_id,assignment_id):
     cursor = database.get_db().cursor()

@@ -6,6 +6,7 @@ from backend.blueprints.course import classes
 from backend.blueprints.comment import comments
 from backend.blueprints.announcement import announcements
 from backend.blueprints.notification import notifications
+from backend.blueprints.grade import grades
 import os
 from dotenv import load_dotenv
 
@@ -48,6 +49,7 @@ def create_app():
     app.register_blueprint(comments)
     app.register_blueprint(notifications)
     app.register_blueprint(announcements)
+    app.register_blueprint(grades)
     os.write(1,bytes(f"Registered blueprints: {app.blueprints}\n","utf-8"))
     # Don't forget to return the app object
     return app
