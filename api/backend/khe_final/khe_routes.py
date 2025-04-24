@@ -70,7 +70,7 @@ def isClassMember(user_id,class_id):
 
 
 
-@users.route('/trylogin/<username>/<password>', methods=['GET','PUT'])
+@users.route('/trylogin/<username>/<password>', methods=['GET'])
 def try_login(username,password):
     if (len(username) > 64 or len(password)!=64):
         return respond("",CODE_INVALID_FORMAT)
@@ -134,30 +134,32 @@ def get_user_info(session_key):
     if (request.method == "POST"):
         fields = ['first_name','last_name','bio','email','password']
 
-        set = ""
-        json = request.form
+        args = request.get_json(force=True)
+
         data = []
+        set_clause = ""
 
         for field in fields:
-            if (data[field] != None):
-                set += f"{field} = %s,"
-                data.append(data[field])
-        
-        set = set.rstrip(',')
+            if args.get(field) is not None:
+                set_clause += f"{field} = %s,"
+                if (field == "password"):
+                    data.append(bytes.fromhex(args[field]))
+                else:
+                    data.append(args[field])
 
-        query = f'''
-            UPDATE Users SET {set} WHERE user_id = {user_id}
-        '''
-        success = cursor.execute(query,data)
-        database.get_db().commit()
+        set_clause = set_clause.rstrip(', ')
+        
+        if (set_clause != ""):
+            query = f'''
+                UPDATE Users 
+                SET {set_clause} 
+                WHERE user_id = {user_id}
+            '''
+            log(query)
+            cursor.execute(query,data)
+            database.get_db().commit()
         
         return respond("",CODE_SUCCESS)
-
-
-@users.route('/userinfo/<session_key>', methods=['GET','POST'])
-def edit_user_info(session_key):
-    pass
-
 
 @users.route('/isValidSession/<session_key>', methods=['GET'])
 def get_valid_session(session_key):
@@ -219,7 +221,7 @@ def getClassInfo(session_key,class_id):
     if (not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     
-    canViewCode = getUserClassPermissions(user_id,class_id).IS_INSTRUCTOR
+    canViewCode = getUserClassPermissions(user_id,class_id).get('IS_INSTRUCTOR')
 
     query = f'''
         SELECT class_id,name,description,organization{',join_code' if canViewCode else ''} FROM Classes WHERE 
@@ -395,7 +397,7 @@ def removeUserFromClass(class_id,user_id):
     cursor.execute(query,(class_id,user_id))
     database.get_db().commit()
 
-@users.route("/leaveClass/<session_key>/<class_id>",methods = ("DELETE"))
+@users.route("/leaveClass/<session_key>/<class_id>",methods = ["DELETE"])
 def leave_class(session_key,class_id):
     user_id = userIDFromSessionKey(session_key)
 
@@ -407,7 +409,7 @@ def leave_class(session_key,class_id):
     removeUserFromClass(class_id,user_id)
     return respond("",CODE_SUCCESS)
 
-@users.route("/removeUser/<session_key>/<class_id>/<user_id>",methods = ("DELETE"))
+@users.route("/removeUser/<session_key>/<class_id>/<user_id>",methods = ["DELETE"])
 def force_leave_class(session_key,class_id,target_id):
     user_id = userIDFromSessionKey(session_key)
 

@@ -6,7 +6,7 @@ import hashlib
 EXCEPTION_REDIRECT = "Login"
 API = "http://api:4000"
 
-def safeRequest(URL):
+def safeGet(URL):
     """
     Tries to get data from the input URL, if the request fails it switches to safe error page specified by
     EXCEPTION_REDIRECT
@@ -47,7 +47,7 @@ def getUserInfo() -> dict:
     :return:
     {username,first_name,last_name,email,bio}
     """
-    result = safeRequest(f"{API}/userinfo/{st.session_state.get('session_key')}")
+    result = safeGet(f"{API}/userinfo/{st.session_state.get('session_key')}")
     return result.json()[0] #the query returns an array with one dictionary
 
 def setUserInfo(first_name=None,last_name=None,bio = None,password = None,email = None) -> bool:
@@ -59,11 +59,11 @@ def setUserInfo(first_name=None,last_name=None,bio = None,password = None,email 
     data = {
         'first_name' : first_name,
         'last_name' : last_name, 
-        'email_name' : email,
+        'email' : email,
         'bio' : bio,
-        'password' : None if (password == None) else hashlib.sha256(password).hexdigest(),
+        'password' : None if password == None else hashlib.sha256(bytes(password,"utf-8")).hexdigest()
     }
-    result = safePost(f"{API}/userinfo/{st.session_state.get('session_key')}",json.dumps(data))
+    result = safePost(f"{API}/userinfo/{st.session_state.get('session_key')}",data)
     return result.status_code == 200
 
 
@@ -73,7 +73,7 @@ def getClassList() -> list[dict]:
     :return:
     [{class_id,name}]
     """
-    result = safeRequest(f"{API}/classlist/{st.session_state.get('session_key')}")
+    result = safeGet(f"{API}/classlist/{st.session_state.get('session_key')}")
     return result.json()
 
 def getClassInfo(class_id : int) -> dict:
@@ -83,7 +83,7 @@ def getClassInfo(class_id : int) -> dict:
     {class_id,name,description,organization,<OPTIONAL> join_code}
     join code is None unless user has permission to view it
     """
-    result = safeRequest(f"{API}/classinfo/{st.session_state.get('session_key')}/{class_id}")
+    result = safeGet(f"{API}/classinfo/{st.session_state.get('session_key')}/{class_id}")
     return result.json()[0]
 
 def getNotifications() -> list[dict]:
@@ -92,7 +92,7 @@ def getNotifications() -> list[dict]:
     :return:
     {notification_date,assignment_name,class_name}
     """
-    result = safeRequest(f"{API}/notifications/{st.session_state.get('session_key')}")
+    result = safeGet(f"{API}/notifications/{st.session_state.get('session_key')}")
     return result.json()
 
 def getAnnouncements(class_id : int) -> list[dict]:
@@ -101,7 +101,7 @@ def getAnnouncements(class_id : int) -> list[dict]:
     :return:
     [{author_id,title,message,date_posted}]
     """
-    result = safeRequest(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}")
+    result = safeGet(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
 def getAssignments(class_id : int) -> list[dict]:
@@ -110,7 +110,7 @@ def getAssignments(class_id : int) -> list[dict]:
     :return:
     [{assignment_id,due_date,name,overall_weight}]
     """
-    result = safeRequest(f"{API}/assignments/{st.session_state.get('session_key')}/{class_id}")
+    result = safeGet(f"{API}/assignments/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
 def getAssignmentDetails(class_id : int,assignment_id : int) -> list[dict]:
@@ -119,7 +119,7 @@ def getAssignmentDetails(class_id : int,assignment_id : int) -> list[dict]:
     :return:
     [{name,value,weight}]
     """
-    result = safeRequest(f"{API}/assignmentDetails/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    result = safeGet(f"{API}/assignmentDetails/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
 
 def getGrade(class_id : int,assignment_id : int) -> list[dict]:
@@ -128,7 +128,7 @@ def getGrade(class_id : int,assignment_id : int) -> list[dict]:
     :return:
     [{name,grade,value,weight}]
     """
-    result = safeRequest(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
+    result = safeGet(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.json()
 
 def getClassPermissions(class_id : int) -> dict:
@@ -145,7 +145,7 @@ def getClassPermissions(class_id : int) -> dict:
         CAN_VIEW_HIDDEN
     }
     """
-    result = safeRequest(f"{API}classPermissions/{st.session_state.get('session_key')}/{class_id}")
+    result = safeGet(f"{API}/classPermissions/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
 def getClassRoster(class_id : int) -> list[dict]:
@@ -154,7 +154,7 @@ def getClassRoster(class_id : int) -> list[dict]:
     :return:
     [{first_name,last_name}]
     """
-    result = safeRequest(f"{API}/classRoster/{st.session_state.get('session_key')}/{class_id}")
+    result = safeGet(f"{API}/classRoster/{st.session_state.get('session_key')}/{class_id}")
     return result.json()
 
 def removeUserFromClass(class_id,user_id=-1) -> bool:
@@ -178,7 +178,7 @@ def joinClass(class_code) -> bool:
     :return:
     True if successful
     """
-    result = safeRequest(f"{API}/joinClass/{st.session_state.get('session_key')}/{class_code}")
+    result = safeGet(f"{API}/joinClass/{st.session_state.get('session_key')}/{class_code}")
     return result.status_code == 200
 
 def createClass(class_name,class_description,organization) -> int:
@@ -192,7 +192,7 @@ def createClass(class_name,class_description,organization) -> int:
      'class_description' : class_description,
      'organization' : organization
     }
-    result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",json.dumps(data))
+    result = safePost(f"{API}/createClass/{st.session_state.get('session_key')}",data)
     return int(result.content)
 
 def createAssignment():

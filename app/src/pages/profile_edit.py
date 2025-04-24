@@ -1,6 +1,5 @@
 import streamlit as st
 import logging
-import requests
 from util.verification import isValidSession
 from util.request import *
 
@@ -118,7 +117,7 @@ def edit_profile_page():
                 )
             with col2:
                 if st.form_submit_button("Cancel", use_container_width=True):
-                    st.switch_page("pages/Profile.py")
+                    st.switch_page("pages/profile_display.py")
 
         # Handle form submission
         if submitted:
@@ -132,26 +131,17 @@ def edit_profile_page():
                 
             # Update user data via API
             try:
-                update_data = {
-                    "session_key": st.session_state.session_key,
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "email": email,
-                    "bio": bio
-                }
-                if new_password:
-                    update_data["password"] = new_password
-                
-                response = requests.post(
-                    "http://api:4000/updateUser",
-                    json=update_data
+
+                setUserInfo(
+                    first_name =  None if (first_name == "") else first_name,
+                    last_name =  None if (last_name == "") else last_name,
+                    email = None if (email == "") else email,
+                    bio = None if (bio == "") else bio,
+                    password=  None if (new_password == "") else new_password
                 )
                 
-                if response.status_code != 200:
-                    raise Exception(response.json().get('error', 'Update failed'))
-                
                 st.success("Profile updated successfully!")
-                st.switch_page("pages/Profile.py")
+                st.switch_page("pages/profile_display.py")
                 
             except Exception as e:
                 st.error(f"Update failed: {str(e)}")
