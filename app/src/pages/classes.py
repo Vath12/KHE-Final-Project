@@ -1,6 +1,6 @@
 import streamlit as st
 from util.verification import isValidSession
-from util.request import getClassInfo, getAssignments, getAnnouncements, getGrade, getAssignmentDetails
+from util.request import getClassInfo, getAssignments, getAnnouncements, getGrade, getAssignmentDetails, getClassPermissions, getClassRoster
 
 isValidSession()
 
@@ -10,6 +10,9 @@ if "selected_class_id" not in st.session_state:
 
 # Get class information
 class_info = getClassInfo(st.session_state.selected_class_id)
+
+# Get class permissions for the current user
+permissions = getClassPermissions(st.session_state.selected_class_id)
 
 # Set up page
 st.set_page_config(layout="wide", page_title=f"Course: {class_info['name']}")
@@ -32,7 +35,7 @@ if "selected_section" not in st.session_state:
 
 # Section buttons
 st.markdown("### Navigate")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
     if st.button("Assignments"):
         st.session_state.selected_section = "assignments"
@@ -42,7 +45,21 @@ with col2:
 with col3:
     if st.button("Grades"):
         st.session_state.selected_section = "grades"
-
+with col4:
+    # Check permission to view class roster
+    if permissions.get("CAN_VIEW_ROSTER", False):
+        if st.button("View Class Roster"):
+            st.session_state.selected_section = "roster"
+    else:
+        # Display the button, but on click, show a message that they can't view the roster
+        if st.button("View Class Roster"):
+            st.session_state.selected_section = "no_roster_permission"
+with col5:
+    # Adding the "Join Code" button
+    if st.button("Join Code"):
+        # Placeholder for join code functionality
+        st.write("Join code functionality is not yet implemented.")
+    
 st.markdown("---")
 
 # Display content based on section
@@ -210,21 +227,33 @@ elif st.session_state.selected_section == "grades":
                         
                         if total_points > 0:
                             percentage = (earned_points / total_points) * 100
-                            st.markdown(f"**Total Score: {earned_points:.2f}/{total_points:.2f} ({percentage:.2f}%)**")
+                            st.markdown(f"**Grade**: {earned_points}/{total_points} = {percentage:.2f}%")
+                        else:
+                            st.markdown("**Grade**: Not graded")
             except Exception as e:
-                st.markdown(f"Error loading grades for {assignment_name}: {str(e)}")
+                st.markdown(f"Error loading grade details: {str(e)}")
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-else:
+elif st.session_state.selected_section == "roster":
+    # Display the class roster at the bottom after it is clicked
+    class_roster = getClassRoster(st.session_state.selected_class_id)
+    
     st.markdown(
-        f"""
-        <div style='padding: 2rem; background-color: #F0EFFF; border-left: 8px solid #9C4DFF; border-radius: 8px;'>
-            <h3>Welcome to {class_info['name']}</h3>
-            <p>{class_info.get('description', 'No description available.')}</p>
-            <p>Organization: {class_info.get('organization', 'N/A')}</p>
-            <p>This is your course dashboard. Select a section above to begin.</p>
-        </div>
+        """
+        <div style='padding: 1rem; background-color: #FFF6D1; border-left: 8px solid #FFC700; border-radius: 8px;'>
+            <h3>Class Roster</h3>
         """,
         unsafe_allow_html=True
     )
+    
+    if not class_roster:
+        st.markdown("<p>No roster available for this course.</p>", unsafe_allow_html=True)
+    else:
+        for student in class_roster:
+            st.write(f"{student['first_name']} {student['last_name']}")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+elif st.session_state.selected_section == "no_roster_permission":
+    st.write("You do not have permission to view the class roster.")
