@@ -152,8 +152,6 @@ def crud_profile_links(session_key,platform_id):
     if (user_id == -1):
         return respond("",CODE_ACCESS_DENIED)
     
-    args = request.get_json(force = True)
-
     if (request.method == "GET"):
         query = '''
             SELECT platform,link FROM UserProfileLinks WHERE user_id = %s
@@ -161,6 +159,9 @@ def crud_profile_links(session_key,platform_id):
         cursor.execute(query,(user_id))
         result = cursor.fetchall()
         return respond(jsonify(result),CODE_SUCCESS)
+    
+    args = request.get_json(force = True)
+
     if (request.method == "POST"):
         query = '''
             INSERT INTO UserProfileLinks (user_id,platform,link) Value

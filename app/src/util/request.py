@@ -88,7 +88,7 @@ def getUserProfileLinks() -> list[dict]:
     5 FACEBOOK\n
     :rtype: list[dict]
     :return:
-    [{platform_id,link}]
+    [{platform,link}]
     """
     result = safeGet(f"{API}/userProfileLink/{st.session_state.get('session_key')}/-1")
     return result.json()
