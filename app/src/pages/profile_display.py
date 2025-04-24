@@ -13,8 +13,12 @@ def profile_display():
         st.stop()
     
     # Get user data from API
-    user_info = getUserInfo()
-    profile_links = getUserProfileLinks()  # Fetch social media links
+    try:
+        user_info = getUserInfo()
+        profile_links = getUserProfileLinks()  # Fetch social media links
+    except Exception as e:
+        st.error("Failed to load user information")
+        st.stop()
 
     # Platform icons and mapping
     platform_icons = {
@@ -81,15 +85,17 @@ def profile_display():
     st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
     # Social Media Links
-    st.markdown("<div class='social-icons'>", unsafe_allow_html=True)
-    for link in profile_links:
-        platform_id = link['platform_id']
-        url = link['link']
-        if url and url.lower() != "no link":
-            icon_path = platform_icons.get(platform_id)
-            if icon_path:
-                st.markdown(f"<a href='{url}' target='_blank'><img src='/{icon_path}'></a>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    if profile_links:
+        st.markdown("<div class='social-icons'>", unsafe_allow_html=True)
+        for link in profile_links:
+            platform = link['platform']
+            url = link['link']
+            if url and url.lower() != "no link":
+                icon_path = platform_icons.get(platform)
+                if icon_path:
+                    # Display the social media icon with link
+                    st.markdown(f"<a href='{url}' target='_blank'><img src='/{icon_path}' alt='social icon'></a>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # User Information
     cols = st.columns(2)
