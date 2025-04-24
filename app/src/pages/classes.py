@@ -21,7 +21,12 @@ st.set_page_config(layout="wide", page_title=f"Course: {class_info['name']}")
 col_left, col_right = st.columns([6, 1])
 
 with col_left:
-    st.markdown(f"<h1 style='color: #7F27FF;'>Course: {class_info['name']}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size: 1em;'>{class_info['organization']}</p>", unsafe_allow_html=True)
+
+    st.markdown(f"<p style='color: #7F27FF; font-size: 2.5em;'>{class_info['name']}</p>", unsafe_allow_html=True)
+
+    st.markdown(f"<p style='font-size: 1em;'>{class_info['description']}</p>", unsafe_allow_html=True)
+
 
 with col_right:
     if st.button("Home", use_container_width=True):
@@ -33,32 +38,26 @@ st.write("")
 if "selected_section" not in st.session_state:
     st.session_state.selected_section = "overview"
 
+if (class_info.get("join_code") != None):
+    st.markdown(f"<p style='color: #0066FF;'>Join Code: {class_info['join_code']}</p>", unsafe_allow_html=True)
+
+canViewRoster = permissions.get("CAN_VIEW_ROSTER", False)
+
 # Section buttons
-st.markdown("### Navigate")
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    if st.button("Assignments"):
+    if st.button("Assignments",use_container_width=True):
         st.session_state.selected_section = "assignments"
 with col2:
-    if st.button("Announcements"):
+    if st.button("Announcements",use_container_width=True):
         st.session_state.selected_section = "announcements"
 with col3:
-    if st.button("Grades"):
+    if st.button("Grades",use_container_width=True):
         st.session_state.selected_section = "grades"
-with col4:
-    # Check permission to view class roster
-    if permissions.get("CAN_VIEW_ROSTER", False):
-        if st.button("View Class Roster"):
+if (canViewRoster):
+    with col4:
+        if st.button("View Class Roster",use_container_width=True):
             st.session_state.selected_section = "roster"
-    else:
-        # Display the button, but on click, show a message that they can't view the roster
-        if st.button("View Class Roster"):
-            st.session_state.selected_section = "no_roster_permission"
-with col5:
-    # Adding the "Join Code" button
-    if st.button("Join Code"):
-        # Placeholder for join code functionality
-        st.write("Join code functionality is not yet implemented.")
     
 st.markdown("---")
 
