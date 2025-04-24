@@ -208,10 +208,10 @@ def removeUserFromClass(class_id,user_id=-1) -> bool:
     True if successful
     """
     if (user_id == -1):
-        result = safeDelete(f"{API}/leaveClass/{st.session_state.get('session_key')}/{class_id}")
+        result = safeDelete(f"{API}/leaveClass/{st.session_state.get('session_key')}/{class_id}", {})
         return result.status_code == 200
     else:
-        result = safeDelete(f"{API}/removeUser/{st.session_state.get('session_key')}/{class_id}/{user_id}")
+        result = safeDelete(f"{API}/removeUser/{st.session_state.get('session_key')}/{class_id}/{user_id}", {})
         return result.status_code == 200
 
 def joinClass(class_code) -> bool:
