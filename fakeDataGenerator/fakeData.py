@@ -88,11 +88,13 @@ criteria = "INSERT INTO AssignmentCriteria VALUES\n"
 grades = "INSERT INTO Grades VALUES"
 id = 1
 id2 = 1
+def randDate():
+    return f'2025-{random.randint(1,5):02d}-{random.randint(1,27):02d} {random.randint(0,23):02d}:{random.randint(0,59):02d}:{random.randint(0,59):02d}'
 for i in range(1,numCourses+1):
     for k in range(random.randint(10,20)):
         assignments[i-1].append([i,id,
                             fake.sentence(),
-                            f'2025-{random.randint(1,5):02d}-{random.randint(1,27):02d} {random.randint(0,23):02d}:{random.randint(0,59):02d}:{random.randint(0,59):02d}',
+                            randDate(),
                             random.randint(5,100)/100.0,[]])
         for z in range(random.randint(1,5)):
             v = random.randint(0,100)
@@ -107,12 +109,20 @@ for c in assignments:
 work = work.rstrip(",\n") + ";"
 criteria = criteria.rstrip(",\n") + ";"
 
+comments = "INSERT INTO Comments (assignment_id, student_id, author_id, created_on,message) VALUES\n"
+
 for m in members:
     if (m[2] == DEFAULT):
         for a in assignments[m[1]-1]:
+            rgrader = random.choice(list(x for x in members if (x[0] == m[1]) and x[2] != DEFAULT))[1]
+            comments += f"({a[1]},{m[0]},{rgrader},'{randDate()}','{''.join(fake.sentences(random.randint(1,4)))}'),\n"
             for c in a[5]:
                 grades += f"({c[0]},{m[0]},{random.randint(0,c[1])}),\n"
 grades = grades.rstrip(",\n")+";"
+comments = comments.rstrip(',\n') + ";"
+
+
+
 data = f'''
 Use gradebook;
 {users}
@@ -122,6 +132,7 @@ Use gradebook;
 {work}
 {criteria}
 {grades}
+{comments}
 '''
 
 with open(outputFile,"w+") as f:
