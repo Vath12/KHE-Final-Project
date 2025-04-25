@@ -77,6 +77,54 @@ def setUserInfo(first_name=None,last_name=None,bio = None,password = None,email 
     result = safePost(f"{API}/userinfo/{st.session_state.get('session_key')}",data)
     return result.status_code == 200
 
+def getUserProfileLinks() -> list[dict]:
+    """
+    platform_ids:\n
+    0 LINKEDIN\n
+    1 SNAPCHAT\n
+    2 INSTAGRAM\n
+    3 DISCORD\n
+    4 GITHUB\n
+    5 FACEBOOK\n
+    :rtype: list[dict]
+    :return:
+    [{platform,link}]
+    """
+    result = safeGet(f"{API}/userProfileLink/{st.session_state.get('session_key')}/-1")
+    return result.json()
+
+def addUserProfileLink(platform : int,link : str) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    data = {
+        "link" : link
+    }
+    result = safePost(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",data)
+    return result.status_code == 200
+
+def setUserProfileLink(platform : int,link : str) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    data = {
+        "link" : link
+    }
+    result = safePut(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",data)
+    return result.status_code == 200
+
+def removeUserProfileLink(platform : int) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """
+    result = safeDelete(f"{API}/userProfileLink/{st.session_state.get('session_key')}/{platform}",{})
+    return result.status_code == 200
 
 def getClassList() -> list[dict]:
     """
@@ -101,9 +149,21 @@ def getNotifications() -> list[dict]:
     """
     :rtype: list[dict]
     :return:
-    {notification_date,assignment_name,class_name}
+    {notification_date,assignment_name,class_name,assignment_id}
     """
     result = safeGet(f"{API}/notifications/{st.session_state.get('session_key')}")
+    return result.json()
+
+def removeNotifications(toRemove : list[int]) -> bool:
+    """
+    :rtype: list[dict]
+    :return:
+    True on success
+    """
+    data = {
+        "removeList" : toRemove
+    }
+    result = safeDelete(f"{API}/notifications/{st.session_state.get('session_key')}",data)
     return result.json()
 
 def getAnnouncements(class_id : int) -> list[dict]:
@@ -263,10 +323,9 @@ def createClass(class_name,class_description,organization) -> int:
 
 def createAssignment(class_id,name,due,weight):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
-    assignment_id
+    assignment_id on Success, None on Failure
     """
     data = {
      'name' : name,
@@ -278,7 +337,6 @@ def createAssignment(class_id,name,due,weight):
 
 def updateAssignmnet(class_id,assignment_id,name,due,weight):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True on success
@@ -293,38 +351,102 @@ def updateAssignmnet(class_id,assignment_id,name,due,weight):
 
 def deleteAssignment(class_id,assignment_id):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True on success
     """
     result = safeDelete(f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}")
     return result.status_code == 200
-    
-def gradeAssignment(class_id,criterion_id,student_id,grade):
+
+def getAssignmentCriterion(class_id : int, assignment_id : int,criterion_id : int) -> dict:
     """
-    TODO: IMPLEMENT
+    :rtype: dict
+    :return:
+    {name,value,weight}
+    """
+    result = safeGet(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
+    return result.json().get(0,None)
+
+
+def createAssignmentCriterion(class_id : int, assignment_id : int ,name : str,value : int,weight : float) -> int:
+    """
+    :rtype: bool
+    :return:
+    criterion_id on Success, None on Failure
+    """
+    data = {
+     'name' : name,
+     'value' : value,
+     'weight' : weight
+    }
+    result = safePost(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/-1",data)
+    return result.json().get('criterion_id')
+
+def updateAssignmentCriterion(class_id : int, assignment_id : int, criterion_id : int, name : str,value : int,weight : float) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+     'name' : name,
+     'value' : value,
+     'weight' : weight
+    }
+    result = safePut(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}",data)
+    return result.status_code == 200
+
+def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : int) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}",{})
+    return result.status_code == 200
+
+def createComment(class_id,assignment_id,student_id,message):
+    """
     :rtype: bool
     :return:
     True if successful
-    """
-    pass
+    """ 
+    data = {
+        'message' : message
+    }
+    result = safePost(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.status_code == 200
 
-def createComment():
+def updateComment(class_id,assignment_id,student_id,message,comment_id):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True if successful
-    """
-    pass
+    """ 
+    data = {
+        'comment_id' : comment_id,
+        'message' : message
+    }
+    result = safePut(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.status_code == 200
 
-def getComments(class_id,assignment_id) -> list[dict]:
+def getComments(class_id,assignment_id,student_id) -> list[dict]:
     """
     TODO: IMPLEMENT
     :rtype: list[dict]
     :return:
     [{message,author_first_name,author_last_name,created_on}]
     """
-    pass
+    result = safeGet(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}")
+    return result.json()
+
+def deleteComment(class_id,assignment_id,student_id):
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """ 
+    data = {}
+    result = safeDelete(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.status_code == 200
 

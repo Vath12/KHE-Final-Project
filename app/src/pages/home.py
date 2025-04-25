@@ -53,7 +53,7 @@ st.sidebar.markdown(
 if st.sidebar.button("Profile", use_container_width=True):
     st.switch_page("pages/profile_display.py")
 if st.sidebar.button("Notifications", use_container_width=True):
-    st.switch_page("pages/notification.py")
+    st.switch_page("pages/notifications.py")
 if st.sidebar.button("Join Class", use_container_width=True):
     st.switch_page("pages/join_classes.py")
 

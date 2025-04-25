@@ -22,6 +22,17 @@ class Permissions(IntFlag):
     IS_INSTRUCTOR = 32
     CAN_VIEW_HIDDEN = 64
 
+PROFILE_LINK_PLATFORMS = {
+    "LINKEDIN" : 0,
+    "SNAPCHAT" : 1,
+    "INSTAGRAM" : 2,
+    "DISCORD" : 3,
+    "GITHUB" : 4,
+    "FACEBOOK" : 5
+}
+
+
+
 def respond(content,code):
     response = make_response(content)
     response.status_code = code
@@ -51,7 +62,7 @@ def isClassMember(user_id,class_id):
     query = '''
         SELECT * FROM Memberships WHERE user_id = %s AND class_id = %s
     '''
-    success = cursor.execute(query,(user_id,class_id))
+    cursor.execute(query,(user_id,class_id))
     return len(cursor.fetchall()) > 0
 
 def getUserClassPermissions(user_id,class_id):

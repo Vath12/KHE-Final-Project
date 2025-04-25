@@ -141,3 +141,66 @@ def leave_class(session_key,class_id):
     
     removeUserFromClass(class_id,user_id)
     return respond("",CODE_SUCCESS)
+
+profileLinks = Blueprint('profileLinks', __name__)
+@profileLinks.route("/userProfileLink/<session_key>/<platform_id>",methods=["GET","POST","PUT","DELETE"])
+def crud_profile_links(session_key,platform_id):
+    cursor = database.get_db().cursor()
+
+    user_id = userIDFromSessionKey(session_key)
+
+    if (user_id == -1):
+        return respond("",CODE_ACCESS_DENIED)
+    
+    if (request.method == "GET"):
+        query = '''
+            SELECT platform,link FROM UserProfileLinks WHERE user_id = %s
+        '''
+        cursor.execute(query,(user_id))
+        result = cursor.fetchall()
+        return respond(jsonify(result),CODE_SUCCESS)
+    
+    args = request.get_json(force = True)
+
+    if (request.method == "PUT" or request.method == "POST"):
+        query = '''
+            SELECT * FROM UserProfileLinks WHERE user_id = %s AND platform = %s
+        '''
+        cursor.execute(query,(user_id,platform_id))
+        result = cursor.fetchall()
+
+        if (len(result) == 0):
+            query = '''
+                INSERT INTO UserProfileLinks (user_id,platform,link) Value
+                (%s,%s,%s)
+            '''
+            cursor.execute(query,(
+                user_id,
+                platform_id,
+                args.get("link","")
+            ))
+            database.get_db().commit()
+
+            return respond("",CODE_SUCCESS)
+        else:
+            query = '''
+                UPDATE UserProfileLinks SET 
+                link = %s
+                WHERE 
+                platform = %s AND user_id = %s
+            '''
+            cursor.execute(query,(
+                args.get("link",""),
+                platform_id,
+                user_id
+            ))
+            database.get_db().commit()
+            return respond("",CODE_SUCCESS)
+        
+    if (request.method == "DELETE"):
+        query = '''
+            DELETE FROM UserProfileLinks WHERE user_id = %s AND platform = %s
+        '''
+        cursor.execute(query,(user_id,platform_id))
+        database.get_db().commit()
+        return respond("",CODE_SUCCESS)
