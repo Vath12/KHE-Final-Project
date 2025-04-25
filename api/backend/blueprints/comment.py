@@ -65,10 +65,10 @@ def comment(session_key,class_id,assignment_id,student_id):
     if (request.method == "PUT"):
         query = '''
         UPDATE Comments SET 
-        message=%s,
+        message=%s
         WHERE
         author_id = %s AND
-        comment_id = %s AND
+        comment_id = %s
         '''
         cursor.execute(query,(
             args.get("message",""),
@@ -82,8 +82,8 @@ def comment(session_key,class_id,assignment_id,student_id):
         DELETE FROM Comments WHERE comment_id = %s AND author_id = %s
         '''
         cursor.execute(query,(
-            user_id,
-            args.get("comment_id",-1)
+            args.get("comment_id",-1),
+            user_id
         ))
         database.get_db().commit()
         return respond("",CODE_SUCCESS)
