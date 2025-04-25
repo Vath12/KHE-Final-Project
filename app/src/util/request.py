@@ -404,32 +404,49 @@ def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : i
     """
     result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
     return result.status_code == 200
-    
 
-def gradeAssignment(class_id,criterion_id,student_id,grade):
+def createComment(class_id,assignment_id,student_id,message):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True if successful
-    """
-    pass
+    """ 
+    data = {
+        'message' : message
+    }
+    result = safePost(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.status_code == 200
 
-def createComment():
+def updateComment(class_id,assignment_id,student_id,message,comment_id):
     """
-    TODO: IMPLEMENT
     :rtype: bool
     :return:
     True if successful
-    """
-    pass
+    """ 
+    data = {
+        'comment_id' : comment_id,
+        'message' : message
+    }
+    result = safePut(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.status_code == 200
 
-def getComments(class_id,assignment_id) -> list[dict]:
+def getComments(class_id,assignment_id,student_id) -> list[dict]:
     """
     TODO: IMPLEMENT
     :rtype: list[dict]
     :return:
     [{message,author_first_name,author_last_name,created_on}]
     """
-    pass
+    result = safeGet(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}")
+    return result.json()
+
+def deleteComment(class_id,assignment_id,student_id):
+    """
+    :rtype: bool
+    :return:
+    True if successful
+    """ 
+    data = {}
+    result = safeDelete(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
+    return result.status_code == 200
 
