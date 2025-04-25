@@ -287,6 +287,121 @@ else:
                                         st.rerun()
                                     else:
                                         status_placeholder.warning(f"Submitted {success_count} out of {len(grades_to_submit)} grades successfully. Failed criteria: {failed_criteria}")
+                            
+                            # NEW: Display existing comments outside the form with edit/delete options
+                            if current_comments:
+                                st.markdown("#### Manage Existing Feedback:")
+                                
+                                # Initialize session state for editing
+                                if 'editing_comment' not in st.session_state:
+                                    st.session_state.editing_comment = None
+                                
+                                # Use direct API calls for debugging
+                                def debug_update_comment(class_id, assignment_id, student_id, comment_id, message):
+                                    """Direct API call to update comment with debug info"""
+                                    try:
+                                        data = {
+                                            'comment_id': comment_id,
+                                            'message': message
+                                        }
+                                        url = f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}"
+                                        response = safePut(url, data)
+                                        
+                                        if response.status_code == 200:
+                                            return True, "Success"
+                                        else:
+                                            return False, f"API error: Status code {response.status_code}"
+                                    except Exception as e:
+                                        return False, f"Exception: {str(e)}"
+                                
+                                # Display each comment with edit/delete options
+                                for comment in current_comments:
+                                    # Extract comment details
+                                    comment_id = comment.get('comment_id')
+                                    author = f"{comment.get('author_first_name', 'Unknown')} {comment.get('author_last_name', 'User')}"
+                                    message = comment.get('message', 'No content')
+                                    created_on = comment.get('created_on', 'Unknown date')
+                                    
+                                    # Create container with border for each comment
+                                    with st.container(border=True):
+                                        # Check if this comment is currently being edited
+                                        if st.session_state.editing_comment == comment_id:
+                                            # Edit form
+                                            with st.form(key=f"edit_comment_{comment_id}"):
+                                                new_message = st.text_area("Edit Comment", value=message, height=100)
+                                                
+                                                col1, col2 = st.columns(2)
+                                                with col1:
+                                                    save_button = st.form_submit_button("Save Changes", use_container_width=True)
+                                                with col2:
+                                                    cancel_button = st.form_submit_button("Cancel", use_container_width=True)
+                                                
+                                                if save_button:
+                                                    # Use direct API call for more control and error information
+                                                    success, debug_info = debug_update_comment(
+                                                        st.session_state.selected_class_id,
+                                                        selected_assignment_id,
+                                                        selected_student_id,
+                                                        comment_id,
+                                                        new_message
+                                                    )
+                                                    
+                                                    if success:
+                                                        st.success("Comment updated successfully!")
+                                                        # Exit edit mode
+                                                        st.session_state.editing_comment = None
+                                                        # Force page refresh to show the updated comment
+                                                        st.rerun()
+                                                    else:
+                                                        st.error(f"Failed to update comment: {debug_info}")
+                                                
+                                                if cancel_button:
+                                                    # Exit edit mode without saving
+                                                    st.session_state.editing_comment = None
+                                                    st.rerun()
+                                        else:
+                                            # Normal display with edit/delete buttons
+                                            col1, col2, col3 = st.columns([8, 1, 1])
+                                            
+                                            with col1:
+                                                # Display author and date
+                                                st.markdown(f"<p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>", unsafe_allow_html=True)
+                                            
+                                            with col2:
+                                                # Edit button
+                                                if st.button("✏️", key=f"edit_{comment_id}", help="Edit this feedback"):
+                                                    st.session_state.editing_comment = comment_id
+                                                    st.rerun()
+                                            
+                                            with col3:
+                                                # Delete button
+                                                if st.button("🗑️", key=f"delete_{comment_id}", help="Delete this feedback"):
+                                                    # Show confirmation dialog
+                                                    st.warning("Are you sure you want to delete this feedback?")
+                                                    
+                                                    confirm_col1, confirm_col2 = st.columns(2)
+                                                    with confirm_col1:
+                                                        if st.button("Yes, Delete", key=f"confirm_delete_{comment_id}", use_container_width=True):
+                                                            # Delete the comment
+                                                            success = deleteComment(
+                                                                st.session_state.selected_class_id,
+                                                                selected_assignment_id,
+                                                                selected_student_id
+                                                            )
+                                                            
+                                                            if success:
+                                                                st.success("Feedback deleted successfully!")
+                                                                # Force page refresh to remove the deleted comment
+                                                                st.rerun()
+                                                            else:
+                                                                st.error("Failed to delete feedback.")
+                                                                
+                                                    with confirm_col2:
+                                                        if st.button("Cancel", key=f"cancel_delete_{comment_id}", use_container_width=True):
+                                                            st.rerun()
+                                            
+                                            # Display the comment content
+                                            st.markdown(f"<p style='margin: 0;'>{message}</p>", unsafe_allow_html=True)
                         else:
                             st.error("Could not find selected student in the roster")
                     else:
