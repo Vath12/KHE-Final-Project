@@ -2,7 +2,10 @@ import hashlib,faker,random
 
 outputFile = 'boostrap.sql'
 
-numUsers = 100
+
+numUsers = 500
+numCourses = 40
+
 users = 'INSERT INTO Users (username,password,first_name,last_name,email,bio) VALUES\n'
 fake = faker.Faker()
 for i in range(numUsers):
@@ -13,7 +16,7 @@ for i in range(numUsers):
     email = fake.email()
     bio = fake.text()
     users+=f"#password = {password}\n"
-    users+=f"('{uname}','{fname}',{lname},0x{hashlib.sha256(password.encode("utf-8")).hexdigest()},'{email}','{bio}'),\n"
+    users+=f"('{uname}','{fname}',{lname},0x{hashlib.sha256(password.encode('utf-8')).hexdigest()},'{email}','{bio}'),\n"
 users = users.rstrip(",")+";"
 
 
@@ -48,11 +51,44 @@ for i in range(40):
     classes+=f"({i},'{fake.word()}','{fake.sentence()}','{codes[-1]}')\n"
 classes = classes.rstrip(",")+";"
 
+memberships = "INSERT INTO Memberships VALUES\n"
+members = []
+assignments = []
+ADMIN = 0b11111111
+TA = 0b01000111
+DEFAULT = 0b00000000
+#professors
+for i in range(numCourses):
+    assignments.append([])
+    members.append((i,i,ADMIN,1))
+#students
+for i in range(numCourses,numUsers):
+    enrolled = []
+    for k in range(random.randint(3,8)):
+        #user_id course_id perms
+        id = random.randint(0,numCourses)
+        while (id in enrolled):
+            id = random.randint(0,numCourses)
+        members.append((i,id,TA if (random.randint(0,100)<5) else DEFAULT,1))
+        enrolled.append(id)
+
+for m in members:
+    memberships+=f"({m[0]},{m[1]},{m[2]},{m[3]}),\n"
+memberships = memberships.rstrip(',')+';'
+
+id = 0
+for i in range(numCourses):
+    assignments[i].append([i,id,
+                           fake.sentence(),
+                           fake.date(),random.randint(5,100)/100.0])
+    id+=1
+
 data = f'''
 Use gradebook;
 {users}
 {profileLinks}
 {classes}
+{memberships}
 '''
 
 with open(outputFile,"w+") as f:
