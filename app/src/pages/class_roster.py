@@ -90,7 +90,7 @@ else:
                 if checkbox_val != permissions_value:
                     permissions_changed = True
             
-            # Add a save button if permissions were changed
+             # Add a save button if permissions were changed
             if permissions_changed:
                 if st.button("Save Permission Changes", key=f"save_permissions_{student['user_id']}"):
                     # Call the setClassPermissions function to update the student's permissions
