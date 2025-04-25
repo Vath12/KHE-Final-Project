@@ -3,7 +3,7 @@ import hashlib,faker,random
 outputFile = 'boostrap.sql'
 
 
-numUsers = 500
+numUsers = 100
 numCourses = 40
 
 users = 'INSERT INTO Users (user_id,username,password,first_name,last_name,email,bio) VALUES\n'
@@ -85,6 +85,7 @@ memberships = memberships.rstrip(',\n')+';'
 
 work = "INSERT INTO Assignments VALUES\n"
 criteria = "INSERT INTO AssignmentCriteria VALUES\n"
+grades = "INSERT INTO Grades VALUES"
 id = 1
 id2 = 1
 for i in range(1,numCourses+1):
@@ -92,9 +93,11 @@ for i in range(1,numCourses+1):
         assignments[i-1].append([i,id,
                             fake.sentence(),
                             f'2025-{random.randint(1,5):02d}-{random.randint(1,27):02d} {random.randint(0,23):02d}:{random.randint(0,59):02d}:{random.randint(0,59):02d}',
-                            random.randint(5,100)/100.0])
+                            random.randint(5,100)/100.0,[]])
         for z in range(random.randint(1,5)):
-            criteria += f"({id2},{i},{id},'{fake.sentence()}',{random.randint(0,100)},{random.randint(10,100)/100.0}),\n"
+            v = random.randint(0,100)
+            assignments[i-1][-1][5].append([id2,v])
+            criteria += f"({id2},{i},{id},'{fake.sentence()}',{v},{random.randint(10,100)/100.0}),\n"
             id2+=1
         id+=1
 
@@ -104,6 +107,12 @@ for c in assignments:
 work = work.rstrip(",\n") + ";"
 criteria = criteria.rstrip(",\n") + ";"
 
+for m in members:
+    if (m[2] == DEFAULT):
+        for a in assignments[m[1]-1]:
+            for c in a[5]:
+                grades += f"({c[0]},{m[0]},{random.randint(0,c[1])}),\n"
+grades = grades.rstrip(",\n")+";"
 data = f'''
 Use gradebook;
 {users}
@@ -112,6 +121,7 @@ Use gradebook;
 {memberships}
 {work}
 {criteria}
+{grades}
 '''
 
 with open(outputFile,"w+") as f:
