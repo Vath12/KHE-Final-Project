@@ -40,6 +40,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Initialize final grade totals
+final_earned_points = 0
+final_total_points = 0
+
 # If no assignments, notify the user
 if not assignments:
     st.markdown("<p>No graded assignments available for this course.</p>", unsafe_allow_html=True)
@@ -50,8 +54,6 @@ else:
 
         # Force reload grades on each render to ensure up-to-date data
         st.session_state.force_reload_grades = True
-
-        # Get grade data for this assignment using the student_id parameter
 
         grades = getGrade(st.session_state.selected_class_id, assignment_id)
 
@@ -81,15 +83,17 @@ else:
                     st.markdown(f"**{name}** ({weight_display}): {grade}/{value}")
 
                     if grade != 'Not graded':
-                        # Convert to float for calculation
                         try:
                             grade_float = float(grade)
                             value_float = float(value)
                             weight_float = float(weight)
 
-                            # Use the weight as is (already in decimal form) for calculations
                             earned_points += grade_float * weight_float
                             total_points += value_float * weight_float
+
+                            # Update final totals
+                            final_earned_points += grade_float * weight_float
+                            final_total_points += value_float * weight_float
                         except ValueError:
                             st.warning(f"Could not calculate grade for {name}: invalid grade '{grade}'")
 
@@ -99,19 +103,16 @@ else:
                 else:
                     st.markdown("**Grade**: Not graded")
 
-            # Add a horizontal divider before feedback section if grades exist
             if grades:
                 st.markdown("---")
 
-            # Try multiple approaches to get comments since we don't know the exact endpoint structure
             found_comments = False
 
-            # Approach 1: Standard approach with student_id = -1
             try:
                 comments = getComments(
                     st.session_state.selected_class_id,
                     assignment_id,
-                    -1  # -1 indicates current user
+                    -1
                 )
 
                 if comments and len(comments) > 0:
@@ -122,28 +123,21 @@ else:
                         message = comment.get('message', 'No content')
                         created_on = comment.get('created_on', 'Unknown date')
 
-                        # Display the comment with styling
                         st.markdown(f"""
                         <div style='margin-top: 0.5rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
                             <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
                             <p style='margin: 0;'>{message}</p>
                         </div>
                         """, unsafe_allow_html=True)
-            except Exception as e:
-                # Silent failure - try the next approach
+            except Exception:
                 pass
 
-            # Approach 2: Try with current user's ID directly from session state
             if not found_comments:
                 try:
                     from util.request import getUserInfo
-
-                    # Get user's actual ID from session state
                     user_info = getUserInfo()
                     if user_info and 'user_id' in user_info:
                         actual_user_id = user_info['user_id']
-
-                        # Try with actual user ID
                         comments = getComments(
                             st.session_state.selected_class_id,
                             assignment_id,
@@ -158,24 +152,21 @@ else:
                                 message = comment.get('message', 'No content')
                                 created_on = comment.get('created_on', 'Unknown date')
 
-                                # Display the comment with styling
                                 st.markdown(f"""
                                 <div style='margin-top: 0.5rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
                                     <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
                                     <p style='margin: 0;'>{message}</p>
                                 </div>
                                 """, unsafe_allow_html=True)
-                except Exception as e:
-                    # Silent failure - try the next approach
+                except Exception:
                     pass
 
-            # Approach 3: Direct API call with different URL structure
             if not found_comments:
                 comments = getComments(
                     st.session_state.selected_class_id,
                     assignment_id, 
                     -1)
-                
+
                 if comments and len(comments) > 0:
                     found_comments = True
                     st.markdown("#### Instructor Feedback:")
@@ -185,18 +176,23 @@ else:
                             message = comment.get('message', 'No content')
                             created_on = comment.get('created_on', 'Unknown date')
 
-                            # Display the comment with styling
                             st.markdown(f"""
                             <div style='margin-top: 0.5rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
                                 <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
                                 <p style='margin: 0;'>{message}</p>
                             </div>
                             """, unsafe_allow_html=True)
-    
 
-            # Display message if no comments found but grades exist
             if not found_comments and grades:
                 st.info("No feedback available for this assignment.")
+
+# Show final grade summary
+st.markdown("---")
+if final_total_points > 0:
+    final_percentage = (final_earned_points / final_total_points) * 100
+    st.markdown(f"### Final Grade: {final_earned_points:.2f}/{final_total_points:.2f} = {final_percentage:.2f}%")
+else:
+    st.markdown("### Final Grade: Not enough graded components to calculate.")
 
 # Close Grades section
 st.markdown("</div>", unsafe_allow_html=True)
