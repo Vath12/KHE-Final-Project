@@ -21,6 +21,9 @@ def comment(session_key,class_id,assignment_id,student_id):
     
     perms = getUserClassPermissions(user_id,class_id)
 
+    if (int(student_id) == -1):
+        student_id = user_id
+
     if (user_id != student_id and not perms.get("CAN_GRADE_ASSIGNMENT",False)):
         return respond("",CODE_ACCESS_DENIED)
     
