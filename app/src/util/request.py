@@ -166,15 +166,6 @@ def removeNotifications(toRemove : list[int]) -> bool:
     result = safeDelete(f"{API}/notifications/{st.session_state.get('session_key')}",data)
     return result.json()
 
-def getAnnouncements(class_id : int) -> list[dict]:
-    """
-    :rtype: list[dict]
-    :return:
-    [{author_id,title,message,date_posted}]
-    """
-    result = safeGet(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}")
-    return result.json()
-
 def getAssignments(class_id : int) -> list[dict]:
     """
     :rtype: list[dict]
@@ -450,3 +441,50 @@ def deleteComment(class_id,assignment_id,student_id):
     result = safeDelete(f"{API}/comment/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}",data)
     return result.status_code == 200
 
+def getAnnouncements(class_id : int) -> list[dict]:
+    """
+    :rtype: list[dict]
+    :return:
+    [{author_id,title,message,date_posted}]
+    """
+    result = safeGet(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}")
+    return result.json()
+
+def createAnnouncement(class_id : int,title : str, message : str) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+        'title' : title,
+        'message' : message
+    }
+    result = safePost(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}",data)
+    return result.json()
+
+def updateAnnouncement(class_id : int,announcement_id : int, title : str, message : str) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+        'announcement_id' : announcement_id,
+        'title' : title,
+        'message' : message
+    }
+    result = safePut(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}",data)
+    return result.json()
+
+def deleteAnnouncement(class_id : int,announcement_id : int) -> bool:
+    """
+    :rtype: bool
+    :return:
+    True on success
+    """
+    data = {
+        'announcement_id' : announcement_id,
+    }
+    result = safeDelete(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}",data)
+    return result.json()
