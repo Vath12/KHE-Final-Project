@@ -420,7 +420,6 @@ def updateComment(class_id,assignment_id,student_id,message,comment_id):
 
 def getComments(class_id,assignment_id,student_id) -> list[dict]:
     """
-    TODO: IMPLEMENT
     :rtype: list[dict]
     :return:
     [{message,author_first_name,author_last_name,created_on}]
