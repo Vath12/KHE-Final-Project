@@ -67,17 +67,16 @@ else:
     for student in class_roster:
         with st.expander(f"{student['first_name']} {student['last_name']}"):
             permissions_changed = False
-            student_permissions = {}
+            student_permissions = getClassPermissions(st.session_state.selected_class_id,student['user_id'])
 
             # Loop over permission map to create checkboxes
             for label, key in permissionMap.items():
                 # Fetch the current permission value for the student
-                permissions_value = student.get(key, False)
+                permissions_value = student_permissions.get(key, False)
 
                 # Set the checkbox value to match the student's current permission
                 checkbox_val = st.checkbox(label, value=permissions_value, key=f"{student['user_id']}.{label}")
                 student_permissions[key] = checkbox_val
-
                 # Check if the permission value has changed
                 if checkbox_val != permissions_value:
                     permissions_changed = True
