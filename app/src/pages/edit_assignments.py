@@ -304,11 +304,20 @@ else:
                         confirm_col1, confirm_col2 = st.columns(2)
                         with confirm_col1:
                             if st.button("Yes, Delete", key="confirm_delete", use_container_width=True):
-                                # Call the deleteAssignment function
-                                success = deleteAssignment(st.session_state.selected_class_id, selected_assignment_id)
-                                if success:
-                                    st.success(f"Assignment '{selected_assignment.get('name')}' deleted successfully")
-                                    st.rerun()
+                                # Call the deleteAssignment function with proper error handling
+                                try:
+                                    # Make a direct API call instead of using the function
+                                    url = f"{API}/modifyAssignment/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}/{selected_assignment_id}"
+                                    response = safeDelete(url, {})
+                                    
+                                    if response and response.status_code == 200:
+                                        st.success(f"Assignment '{selected_assignment.get('name')}' deleted successfully")
+                                        # Redirect back to the main course page after deletion
+                                        st.switch_page("pages/classes.py")
+                                    else:
+                                        st.error(f"Failed to delete assignment. Status code: {response.status_code if response else 'No response'}")
+                                except Exception as e:
+                                    st.error(f"Error deleting assignment: {str(e)}")
                         with confirm_col2:
                             if st.button("Cancel", key="cancel_delete", use_container_width=True):
                                 st.rerun()
