@@ -74,7 +74,7 @@ else:
                 # Fetch the current permission value for the student
                 permissions_value = student.get(key, False)
 
-                # Ensure that the permissions are properly retrieved (checking permissions from API)
+                # Set the checkbox value to match the student's current permission
                 checkbox_val = st.checkbox(label, value=permissions_value, key=f"{student['user_id']}.{label}")
                 student_permissions[key] = checkbox_val
 
