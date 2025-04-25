@@ -1,7 +1,8 @@
 import streamlit as st
 from util.verification import isValidSession
-from util.request import getClassInfo, getClassPermissions, getClassRoster, setClassPermissions
+from util.request import getClassInfo, getClassPermissions, getClassRoster, setClassPermissions, removeUserFromClass
 
+# Ensure the user has a valid session
 isValidSession()
 
 # Get class ID from session state or set a default
@@ -16,6 +17,7 @@ permissions = getClassPermissions(st.session_state.selected_class_id)
 
 canViewRoster = permissions.get("CAN_VIEW_ROSTER", False)
 canManageAssignments = permissions.get("CAN_MANAGE_ASSIGNMENTS", False)
+canRemoveStudent = permissions.get("CAN_REMOVE_STUDENT", False)
 
 # Set up page
 st.set_page_config(layout="wide", page_title=f"Course: {class_info['name']} - Class Roster")
@@ -24,7 +26,7 @@ st.set_page_config(layout="wide", page_title=f"Course: {class_info['name']} - Cl
 col_left, col_right = st.columns([6, 1])
 
 with col_left:
-    st.markdown(f"<p style='color: #7F27FF; font-size: 2.5em;'>{class_info['name']}: Class Roster</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color: #7F27FF; font-size: 2.5em;'>{class_info['name']} - Class Roster</p>", unsafe_allow_html=True)
 
 with col_right:
     if st.button("Back to Course", use_container_width=True):
@@ -32,6 +34,7 @@ with col_right:
 
 st.markdown("---")
 
+# Check if user has permission to view the roster or manage assignments
 if not (canViewRoster or canManageAssignments):
     st.error("You do not have permission to view the class roster.")
     st.stop()
@@ -51,49 +54,57 @@ if not class_roster:
     st.markdown("<p>No roster available for this course.</p>", unsafe_allow_html=True)
 else:
     permissionMap = {
-        'View Roster':'CAN_VIEW_ROSTER',
-        'Manage Assignments':'CAN_MANAGE_ASSIGNMENTS',
-        'Grade Assignments':'CAN_GRADE_ASSIGNMENT',
-        'Remove Students':'CAN_REMOVE_STUDENT',
-        'Edit Course':'CAN_EDIT_COURSE',
-        'View Hidden Members':'CAN_VIEW_HIDDEN',
+        'View Roster': 'CAN_VIEW_ROSTER',
+        'Manage Assignments': 'CAN_MANAGE_ASSIGNMENTS',
+        'Grade Assignments': 'CAN_GRADE_ASSIGNMENT',
+        'Remove Students': 'CAN_REMOVE_STUDENT',
+        'Edit Course': 'CAN_EDIT_COURSE',
+        'View Hidden Members': 'CAN_VIEW_HIDDEN',
     }
-    
-    # Add a student count at the top
+
     st.markdown(f"**Total students enrolled:** {len(class_roster)}")
-    
+
     for student in class_roster:
         with st.expander(f"{student['first_name']} {student['last_name']}"):
-            # Show permissions as checkboxes
             permissions_changed = False
             student_permissions = {}
-            
-            for k in permissionMap.keys():
-                permission_key = permissionMap[k]
-                # Fix: Access permissions safely with default False value
-                permissions_value = False
-                
-                # Handle permissions differently based on the data structure
-                # Check if 'permissions' exists and is a dictionary
-                if 'permissions' in student and isinstance(student['permissions'], dict):
-                    permissions_value = student['permissions'].get(permission_key, False)
-                # Otherwise, try direct attribute access if student is an object or dict with direct permissions
-                elif permission_key in student:
-                    permissions_value = student[permission_key]
-                
-                checkbox_val = st.checkbox(k, value=permissions_value, key=f"{student['user_id']}.{k}")
-                
-                # Store the checkbox value
-                student_permissions[permission_key] = checkbox_val
-                
-                # Check if the value changed
+
+            # Loop over permission map to create checkboxes
+            for label, key in permissionMap.items():
+                # Fetch the current permission value for the student
+                permissions_value = student.get(key, False)
+
+                # Ensure that the permissions are properly retrieved (checking permissions from API)
+                checkbox_val = st.checkbox(label, value=permissions_value, key=f"{student['user_id']}.{label}")
+                student_permissions[key] = checkbox_val
+
+                # Check if the permission value has changed
                 if checkbox_val != permissions_value:
                     permissions_changed = True
-            
-             # Add a save button if permissions were changed
+
+            # New checkbox: Visible to All
+            visible_key = f"{student['user_id']}.VISIBLE_TO_ALL"
+            is_visible = student.get("IS_VISIBLE", True)  # Default to True if not provided
+            visible_to_all = st.checkbox("Visible to All", value=is_visible, key=visible_key)
+            student_permissions["IS_VISIBLE"] = visible_to_all
+
+            # Add a "Kick" button next to the student's name if the user has permission to remove students
+            if canRemoveStudent:
+                if st.button(f"Kick {student['first_name']} {student['last_name']}", key=f"kick_{student['user_id']}"):
+                    # Call the removeUserFromClass function when the button is clicked
+                    result = removeUserFromClass(
+                        class_id=st.session_state.selected_class_id,
+                        user_id=student['user_id']
+                    )
+                    if result:
+                        st.success(f"{student['first_name']} {student['last_name']} has been removed from the class.")
+                        st.rerun()  # Reload the page to update the roster
+                    else:
+                        st.error(f"Failed to remove {student['first_name']} {student['last_name']} from the class.")
+
+            # Optional: Save button only if permissions changed
             if permissions_changed:
                 if st.button("Save Permission Changes", key=f"save_permissions_{student['user_id']}"):
-                    # Call the setClassPermissions function to update the student's permissions
                     result = setClassPermissions(
                         class_id=st.session_state.selected_class_id,
                         target_user_id=student['user_id'],
@@ -102,15 +113,16 @@ else:
                         CAN_GRADE_ASSIGNMENT=student_permissions.get('CAN_GRADE_ASSIGNMENT', False),
                         CAN_REMOVE_STUDENT=student_permissions.get('CAN_REMOVE_STUDENT', False),
                         CAN_EDIT_COURSE=student_permissions.get('CAN_EDIT_COURSE', False),
-                        IS_INSTRUCTOR=student_permissions.get('IS_INSTRUCTOR', False),
                         CAN_VIEW_HIDDEN=student_permissions.get('CAN_VIEW_HIDDEN', False),
-                        IS_VISIBLE=True
+                        IS_VISIBLE=student_permissions.get("IS_VISIBLE", True),
+                        IS_INSTRUCTOR=student_permissions.get("IS_INSTRUCTOR", False)  # <- Added IS_INSTRUCTOR
                     )
-                    
+
+                    # Since result is a bool, check if it's True (success) or False (failure)
                     if result:
                         st.success(f"Permissions updated for {student['first_name']} {student['last_name']}")
                         st.rerun()
                     else:
-                        st.error("Failed to update permissions")
+                        st.error(f"Failed to update permissions for {student['first_name']} {student['last_name']}.")
 
 st.markdown("</div>", unsafe_allow_html=True)
