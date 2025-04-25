@@ -164,7 +164,7 @@ def removeNotifications(toRemove : list[int]) -> bool:
         "removeList" : toRemove
     }
     result = safeDelete(f"{API}/notifications/{st.session_state.get('session_key')}",data)
-    return result.json()
+    return result.status_code == 200
 
 def getAnnouncements(class_id : int) -> list[dict]:
     """
