@@ -260,7 +260,7 @@ def setClassPermissions(
         'CAN_VIEW_HIDDEN' : CAN_VIEW_HIDDEN,
         'IS_VISIBLE' : IS_VISIBLE,
     }
-    result = safePost(f"{API}/classPermissions/{st.session_state.get('session_key')}/-1",data)
+    result = safePost(f"{API}/classPermissions/{st.session_state.get('session_key')}/{class_id}/-1",data)
     return result.status_code == 200
 
 def getClassRoster(class_id : int) -> list[dict]:

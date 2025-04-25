@@ -171,7 +171,7 @@ def get_class_roster(session_key,class_id):
     result = cursor.fetchall()
     return (jsonify(result))
 
-@classes.route("/removeUser/<session_key>/<class_id>/<user_id>",methods = ["DELETE"])
+@classes.route("/removeUser/<session_key>/<class_id>/<target_id>",methods = ["DELETE"])
 def force_leave_class(session_key,class_id,target_id):
     user_id = userIDFromSessionKey(session_key)
 
@@ -182,7 +182,7 @@ def force_leave_class(session_key,class_id,target_id):
     
     perms = getUserClassPermissions(user_id,class_id)
 
-    if (not perms.CAN_REMOVE_STUDENT):
+    if (not perms.get('CAN_REMOVE_STUDENT',False)):
         return respond("",CODE_ACCESS_DENIED)
     
     removeUserFromClass(class_id,target_id)
