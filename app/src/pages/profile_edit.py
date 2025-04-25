@@ -131,8 +131,5 @@ def edit_profile_page():
 
             st.success("Profile updated successfully!")
             st.switch_page("pages/profile_display.py")
-
-           
-
 if __name__ == "__main__":
     edit_profile_page()
