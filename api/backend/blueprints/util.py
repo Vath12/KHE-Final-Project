@@ -62,7 +62,7 @@ def isClassMember(user_id,class_id):
     query = '''
         SELECT * FROM Memberships WHERE user_id = %s AND class_id = %s
     '''
-    success = cursor.execute(query,(user_id,class_id))
+    cursor.execute(query,(user_id,class_id))
     return len(cursor.fetchall()) > 0
 
 def getUserClassPermissions(user_id,class_id):
