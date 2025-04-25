@@ -48,7 +48,7 @@ CREATE TABLE Assignments (
     assignment_id INTEGER NOT NULL AUTO_INCREMENT,
     name VARCHAR(128) NOT NULL,
     due_date DATETIME NOT NULL,
-    overall_weight DECIMAL NOT NULL,
+    overall_weight FLOAT(24) NOT NULL,
     PRIMARY KEY (assignment_id),
     FOREIGN KEY (class_id) REFERENCES Classes (class_id) ON DELETE CASCADE
 );
@@ -58,8 +58,8 @@ CREATE TABLE AssignmentCriteria (
     class_id INTEGER NOT NULL,
     assignment_id INTEGER NOT NULL,
     name VARCHAR(128) NOT NULL,
-    value DECIMAL NOT NULL,
-    weight DECIMAL NOT NULL,
+    value FLOAT(24) NOT NULL,
+    weight FLOAT(24) NOT NULL,
     PRIMARY KEY (criterion_id),
     FOREIGN KEY (assignment_id) REFERENCES Assignments (assignment_id) ON DELETE CASCADE
 );
@@ -67,7 +67,7 @@ CREATE TABLE AssignmentCriteria (
 CREATE TABLE Grades (
     assignment_criterion_id INTEGER NOT NULL,
     student_id INTEGER NOT NULL,
-    grade DECIMAL NOT NULL,
+    grade FLOAT(24) NOT NULL,
     PRIMARY KEY (assignment_criterion_id,student_id),
     FOREIGN KEY (assignment_criterion_id) REFERENCES AssignmentCriteria (criterion_id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES Users (user_id) ON DELETE CASCADE

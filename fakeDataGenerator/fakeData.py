@@ -118,6 +118,7 @@ for m in members:
             comments += f"({a[1]},{m[0]},{rgrader},'{randDate()}','{''.join(fake.sentences(random.randint(1,4)))}'),\n"
             for c in a[5]:
                 grades += f"({c[0]},{m[0]},{random.randint(0,c[1])}),\n"
+                
 grades = grades.rstrip(",\n")+";"
 comments = comments.rstrip(',\n') + ";"
 
