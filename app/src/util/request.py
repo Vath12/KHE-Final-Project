@@ -404,16 +404,6 @@ def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : i
     """
     result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
     return result.status_code == 200
-    
-
-def gradeAssignment(class_id,criterion_id,student_id,grade):
-    """
-    TODO: IMPLEMENT
-    :rtype: bool
-    :return:
-    True if successful
-    """
-    pass
 
 def createComment(class_id,assignment_id,student_id,message):
     """
