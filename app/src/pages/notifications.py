@@ -14,17 +14,16 @@ def notifications_page():
 
     # Sidebar
     with st.sidebar:
-        # "Home" button that switches to the homepage
         if st.button("Home"):
-            st.switch_page("pages/home")  # Switch to the homepage page
+            st.switch_page("pages/home.py")
 
-    # Custom CSS for layout adjustments
+    # CSS styles
     st.markdown("""
     <style>
         .title-container {
             padding-top: 40px;
             padding-bottom: 10px;
-            margin-left: -30px;  /* move title further left */
+            margin-left: -30px;
         }
         .main-title {
             font-size: 2.5rem;
@@ -46,7 +45,7 @@ def notifications_page():
             width: 100%;
             text-align: left;
             position: relative;
-            margin-bottom: 1rem;  /* Add space between notifications */
+            margin-bottom: 1rem;
         }
         .delete-button {
             margin-top: 10px;
@@ -64,37 +63,39 @@ def notifications_page():
 
     # Title
     st.markdown("<div class='title-container'><div class='main-title'>Notifications</div></div>", unsafe_allow_html=True)
-
-    # Main content area
     st.markdown("<div class='centered-container'>", unsafe_allow_html=True)
-    
-    # Fetch notifications
-    notifications = getNotifications()
+
+    # Initialize state
+    if "selected_notifications" not in st.session_state:
+        st.session_state.selected_notifications = []
+    if "deleted_ids" not in st.session_state:
+        st.session_state.deleted_ids = set()
+
+    notifications = [n for n in getNotifications() if n.get("assignment_id") not in st.session_state.deleted_ids]
 
     if notifications:
-        selected_notifications = []
-
         for notification in notifications:
-            # Extract details from the notification
-            notification_date = notification.get('notification_date', 'Date not available')
+            assignment_id = notification.get('assignment_id', 'ID not available')
             assignment_name = notification.get('assignment_name', 'Assignment name not available')
             class_name = notification.get('class_name', 'Class name not available')
-            assignment_id = notification.get('assignment_id', 'ID not available')
+            notification_date = notification.get('notification_date', 'Date not available')
 
-            # Display each notification with a checkbox
             message = f"Your assignment '{assignment_name}' for class '{class_name}' was graded on {notification_date}."
 
-            with st.container():
-                # Checkbox for selecting notification
-                if st.checkbox(f"Select to delete: {message}", key=assignment_id):
-                    selected_notifications.append(assignment_id)
+            if st.checkbox(f"Select to delete: {message}", key=str(assignment_id)):
+                if assignment_id not in st.session_state.selected_notifications:
+                    st.session_state.selected_notifications.append(assignment_id)
+            else:
+                if assignment_id in st.session_state.selected_notifications:
+                    st.session_state.selected_notifications.remove(assignment_id)
 
-        # Button to delete selected notifications
         if st.button("Delete Selected Notifications"):
-            for assignment_id in selected_notifications:
-                removeNotifications(assignment_id)  # Remove the notification using the assignment ID
+            for assignment_id in st.session_state.selected_notifications:
+                removeNotifications(assignment_id)
+                st.session_state.deleted_ids.add(assignment_id)
+
             st.success("Selected notifications have been deleted.")
-            st.experimental_rerun()  # Refresh the page to reflect the update
+            st.session_state.selected_notifications = []
 
     else:
         st.write("You don't have any notifications yet.")
