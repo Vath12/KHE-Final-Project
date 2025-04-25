@@ -215,7 +215,7 @@ def deleteGrade(class_id : int,assignment_id : int,student_id : int) -> bool:
     result = safeGet(f"{API}/grade/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{student_id}")
     return result.status_code == 200
 
-def getClassPermissions(class_id : int) -> dict:
+def getClassPermissions(class_id : int,target_user_id : int = -1) -> dict:
     """
     :rtype: dict
     :return:
@@ -229,7 +229,7 @@ def getClassPermissions(class_id : int) -> dict:
         CAN_VIEW_HIDDEN
     }
     """
-    result = safeGet(f"{API}/classPermissions/{st.session_state.get('session_key')}/{class_id}")
+    result = safeGet(f"{API}/classPermissions/{st.session_state.get('session_key')}/{class_id}/{target_user_id}")
     return result.json()
 
 def setClassPermissions(
@@ -260,7 +260,7 @@ def setClassPermissions(
         'CAN_VIEW_HIDDEN' : CAN_VIEW_HIDDEN,
         'IS_VISIBLE' : IS_VISIBLE,
     }
-    result = safePost(f"{API}/classPermissions/{st.session_state.get('session_key')}",data)
+    result = safePost(f"{API}/classPermissions/{st.session_state.get('session_key')}/-1",data)
     return result.status_code == 200
 
 def getClassRoster(class_id : int) -> list[dict]:
