@@ -483,4 +483,4 @@ def deleteAnnouncement(class_id : int,announcement_id : int) -> bool:
         'announcement_id' : announcement_id,
     }
     result = safeDelete(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}",data)
-    return result.json()
+    return result.status_code == 200

@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 from util.verification import isValidSession
-from util.request import getClassInfo, getAnnouncements, getClassPermissions, API, safePost, safePut, safeDelete
+from util.request import getClassInfo, getAnnouncements, getClassPermissions, deleteAnnouncement, API, safePost, safePut
 
 isValidSession()
 
@@ -65,21 +65,18 @@ if is_instructor:
                     st.warning("Both title and message are required")
                 else:
                     # Use direct API call for creating announcement
-                    try:
-                        data = {
-                            'title': new_title,
-                            'message': new_message
-                        }
-                        result = safePost(f"{API}/announcements/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}", data)
-                        
-                        if result and result.status_code == 200:
-                            st.success("Announcement posted successfully!")
-                            time.sleep(1)
-                            st.rerun()
-                        else:
-                            st.error("Failed to post announcement. Please try again.")
-                    except Exception as e:
-                        st.error(f"Error posting announcement: {str(e)}")
+                    data = {
+                        'title': new_title,
+                        'message': new_message
+                    }
+                    result = safePost(f"{API}/announcements/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}", data)
+                    
+                    if result and result.status_code == 200:
+                        st.success("Announcement posted successfully!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("Failed to post announcement. Please try again.")
     
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -95,9 +92,6 @@ st.markdown(
 if not announcements:
     st.markdown("<p>No announcements available for this course.</p>", unsafe_allow_html=True)
 else:
-    # Debug to see what fields are available in each announcement
-    # st.write(announcements)
-    
     # Loop through and display each announcement
     for i, announcement in enumerate(announcements):
         title = announcement.get('title', 'Untitled Announcement')
@@ -142,29 +136,26 @@ else:
                     if not edited_title or not edited_message:
                         st.warning("Both title and message are required")
                     else:
-                        try:
-                            # Direct API call to update announcement
-                            data = {
-                                'announcement_id': announcement_id,
-                                'title': edited_title,
-                                'message': edited_message
-                            }
-                            
-                            # Directly call the API route without relying on helper functions
-                            url = f"{API}/announcements/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}"
-                            result = safePut(url, data)
-                            
-                            if result and result.status_code == 200:
-                                st.success("Announcement updated successfully!")
-                                # Exit edit mode
-                                st.session_state.editing_announcement_index = None
-                                # Force refresh to show the updated announcement
-                                time.sleep(1)
-                                st.rerun()
-                            else:
-                                st.error(f"Failed to update announcement. Status code: {result.status_code if result else 'Unknown'}")
-                        except Exception as e:
-                            st.error(f"Error updating announcement: {str(e)}")
+                        # Direct API call to update announcement
+                        data = {
+                            'announcement_id': announcement_id,
+                            'title': edited_title,
+                            'message': edited_message
+                        }
+                        
+                        # Directly call the API route without relying on helper functions
+                        url = f"{API}/announcements/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}"
+                        result = safePut(url, data)
+                        
+                        if result and result.status_code == 200:
+                            st.success("Announcement updated successfully!")
+                            # Exit edit mode
+                            st.session_state.editing_announcement_index = None
+                            # Force refresh to show the updated announcement
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to update announcement. Status code: {result.status_code if result else 'Unknown'}")
                 
                 if cancel_edit_button:
                     # Exit edit mode without saving
@@ -189,36 +180,41 @@ else:
                     with col3:
                         # Delete button
                         if st.button("🗑️", key=f"delete_btn_{i}", help="Delete this announcement"):
-                            # Show confirmation dialog
-                            st.warning("Are you sure you want to delete this announcement?")
+                            # Store the announcement being deleted in session state
+                            st.session_state[f"deleting_announcement_{i}"] = True
+                            st.rerun()
                             
-                            confirm_col1, confirm_col2 = st.columns(2)
-                            with confirm_col1:
-                                if st.button("Yes, Delete", key=f"confirm_delete_{i}", use_container_width=True):
-                                    try:
-                                        # Direct API call to delete announcement
-                                        # Looking at backend code, we see it expects 'announcement_id' in the JSON payload
-                                        data = {
-                                            'announcement_id': announcement_id
-                                        }
-                                        
-                                        # Directly call the API route
-                                        url = f"{API}/announcements/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}"
-                                        result = safeDelete(url, data)
-                                        
-                                        if result and result.status_code == 200:
-                                            st.success("Announcement deleted successfully!")
-                                            # Force refresh to remove the deleted announcement
-                                            time.sleep(1)
-                                            st.rerun()
-                                        else:
-                                            st.error(f"Failed to delete announcement. Status code: {result.status_code if result else 'Unknown'}")
-                                    except Exception as e:
-                                        st.error(f"Error deleting announcement: {str(e)}")
-                                        
-                            with confirm_col2:
-                                if st.button("Cancel", key=f"cancel_delete_{i}", use_container_width=True):
+                    # Handle deletion confirmation
+                    if st.session_state.get(f"deleting_announcement_{i}", False):
+                        st.warning("Are you sure you want to delete this announcement?")
+                        
+                        confirm_col1, confirm_col2 = st.columns(2)
+                        with confirm_col1:
+                            if st.button("Yes, Delete", key=f"confirm_delete_{i}", use_container_width=True):
+                                # Use the backend API function for deletion
+                                result = deleteAnnouncement(
+                                    st.session_state.selected_class_id,
+                                    announcement_id
+                                )
+                                
+                                # Check if deletion was successful
+                                if result:
+                                    st.success("Announcement deleted successfully!")
+                                    # Force refresh to remove the deleted announcement
+                                    time.sleep(1)
+                                    # Clear the deletion state
+                                    if f"deleting_announcement_{i}" in st.session_state:
+                                        del st.session_state[f"deleting_announcement_{i}"]
                                     st.rerun()
+                                else:
+                                    st.error("Failed to delete announcement.")
+                                    
+                        with confirm_col2:
+                            if st.button("Cancel", key=f"cancel_delete_{i}", use_container_width=True):
+                                # Clear the deletion state
+                                if f"deleting_announcement_{i}" in st.session_state:
+                                    del st.session_state[f"deleting_announcement_{i}"]
+                                st.rerun()
                 else:
                     # Regular title display for non-instructors
                     st.markdown(f"<h4>{title}</h4>", unsafe_allow_html=True)

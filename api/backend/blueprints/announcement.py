@@ -8,7 +8,7 @@ from backend.blueprints.util import *
 
 announcements = Blueprint('announcements', __name__)
 
-@announcements.route('/announcements/<session_key>/<class_id>',methods = ["GET","POST","PUT","UPDATE"])
+@announcements.route('/announcements/<session_key>/<class_id>',methods = ["GET","POST","PUT","DELETE"])
 def get_announcements(session_key,class_id):
     cursor = database.get_db().cursor()
 
@@ -51,7 +51,7 @@ def get_announcements(session_key,class_id):
         return respond("",CODE_SUCCESS)
     if (request.method == "DELETE"):
         query = '''
-            DELETE FROM AnnouncementsWHERE
+            DELETE FROM Announcements WHERE
             class_id = %s AND author_id = %s AND announcement_id = %s
         '''
         cursor.execute(query,(class_id,user_id,args.get("announcement_id",-1)))
