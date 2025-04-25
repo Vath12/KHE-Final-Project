@@ -2,11 +2,7 @@ import streamlit as st
 import requests
 import time
 from util.verification import isValidSession
-from util.request import (getClassInfo, getAssignments, getAnnouncements, getGrade, 
-                          getAssignmentDetails, getClassPermissions, getClassRoster, 
-                          setGrade, deleteAssignment, updateAssignmnet, 
-                          createAssignmentCriterion, updateAssignmentCriterion, 
-                          safeDelete, API, safePut, getComments, createComment)
+from util.request import *
 
 isValidSession()
 

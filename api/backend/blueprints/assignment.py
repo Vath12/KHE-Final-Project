@@ -87,7 +87,6 @@ def create_update_delete_assignment(session_key,class_id,assignment_id):
         overall_weight=%s WHERE assignment_id = %s
         '''
         cursor.execute(query,(
-            class_id,
             args.get("name","Untitled"),
             args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
             args.get("overall_weight",1),
@@ -164,8 +163,8 @@ def crud_assignment_criterion(session_key,class_id,assignment_id,criterion_id):
         '''
         cursor.execute(query,(
             args.get("name","Untitled"),
-            args.get("value",0),
-            args.get("weight",1.0),
+            args.get("value","0"),
+            args.get("weight","1.0"),
             criterion_id,
             class_id
         ))

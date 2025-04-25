@@ -393,7 +393,7 @@ def updateAssignmentCriterion(class_id : int, assignment_id : int, criterion_id 
      'value' : value,
      'weight' : weight
     }
-    result = safePut(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}",data)
+    result = safePut(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}",data)
     return result.status_code == 200
 
 def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : int) -> bool:
@@ -402,7 +402,7 @@ def deleteAssignmentCriterion(class_id: int,assignment_id : int,criterion_id : i
     :return:
     True on success
     """
-    result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
+    result = safeDelete(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}",{})
     return result.status_code == 200
 
 def createComment(class_id,assignment_id,student_id,message):
