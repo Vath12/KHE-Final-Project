@@ -70,14 +70,24 @@ else:
             
             for k in permissionMap.keys():
                 permission_key = permissionMap[k]
-                initial_value = student.get('permissions', {}).get(permission_key, False)
-                checkbox_val = st.checkbox(k, value=initial_value, key=f"{student['user_id']}.{k}")
+                # Fix: Access permissions safely with default False value
+                permissions_value = False
+                
+                # Handle permissions differently based on the data structure
+                # Check if 'permissions' exists and is a dictionary
+                if 'permissions' in student and isinstance(student['permissions'], dict):
+                    permissions_value = student['permissions'].get(permission_key, False)
+                # Otherwise, try direct attribute access if student is an object or dict with direct permissions
+                elif permission_key in student:
+                    permissions_value = student[permission_key]
+                
+                checkbox_val = st.checkbox(k, value=permissions_value, key=f"{student['user_id']}.{k}")
                 
                 # Store the checkbox value
                 student_permissions[permission_key] = checkbox_val
                 
                 # Check if the value changed
-                if checkbox_val != initial_value:
+                if checkbox_val != permissions_value:
                     permissions_changed = True
             
             # Add a save button if permissions were changed
