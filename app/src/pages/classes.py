@@ -52,7 +52,7 @@ nav_buttons.append({"label": "Assignments", "section": "assignments"})
 
 # Add Create button if user has permission
 if canManageAssignments:
-    nav_buttons.append({"label": "Create", "action": "switch_page", "target": "pages/assignments.py"})
+    nav_buttons.append({"label": "Create", "action": "switch_page", "target": "pages/create_assignments.py"})
 
 # Add other standard buttons
 nav_buttons.append({"label": "Announcements", "section": "announcements"})
