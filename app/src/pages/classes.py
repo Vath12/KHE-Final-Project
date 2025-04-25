@@ -141,24 +141,26 @@ if st.session_state.selected_section == "assignments":
                 else:
                     st.markdown("No detailed components available for this assignment.")
                 
-                # Get and display comments for the assignment
+                # Get and display comments for the current user for this assignment
                 try:
-                    comments = getComments(st.session_state.selected_class_id, assignment_id)
+                    # Use current user's ID (-1)
+                    comments = getComments(st.session_state.selected_class_id, assignment_id, -1)
                     
                     if comments and len(comments) > 0:
-                        st.markdown("#### Comments:")
+                        st.markdown("#### Instructor Feedback:")
                         for comment in comments:
                             author = f"{comment.get('author_first_name', 'Unknown')} {comment.get('author_last_name', 'User')}"
                             message = comment.get('message', 'No content')
                             created_on = comment.get('created_on', 'Unknown date')
                             
                             st.markdown(f"""
-                            <div style='margin-bottom: 1rem; padding: 0.75rem; background-color: #f5f5f5; border-radius: 6px;'>
+                            <div style='margin-bottom: 1rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
                                 <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
                                 <p style='margin: 0;'>{message}</p>
                             </div>
                             """, unsafe_allow_html=True)
-                except:
+                except Exception as e:
+                    # No need to display an error to the user
                     pass
         
         st.markdown("</ul>", unsafe_allow_html=True)
@@ -269,9 +271,10 @@ elif st.session_state.selected_section == "grades":
                     else:
                         st.markdown("**Grade**: Not graded")
                 
-                # Get and display comments for this assignment
+                # Get and display comments for the current user for this assignment
                 try:
-                    comments = getComments(st.session_state.selected_class_id, assignment_id)
+                    # Get comments specific to the current user (student_id=-1)
+                    comments = getComments(st.session_state.selected_class_id, assignment_id, -1)
                     
                     if comments and len(comments) > 0:
                         st.markdown("#### Instructor Feedback:")
@@ -286,7 +289,8 @@ elif st.session_state.selected_section == "grades":
                                 <p style='margin: 0;'>{message}</p>
                             </div>
                             """, unsafe_allow_html=True)
-                except:
+                except Exception as e:
+                    # Silent fail - don't show errors to students
                     pass
     
     st.markdown("</div>", unsafe_allow_html=True)
@@ -365,11 +369,12 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                                     st.error(f"Error fetching grades: {str(e)}")
                                     current_grades = []
                                 
-                                # Get existing comments/feedback
+                                # Get existing comments/feedback for this specific student
                                 try:
                                     current_comments = getComments(
                                         st.session_state.selected_class_id,
-                                        selected_assignment_id
+                                        selected_assignment_id,
+                                        selected_student_id
                                     )
                                 except:
                                     current_comments = []
@@ -448,7 +453,7 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                                     # Feedback/Comments section
                                     st.markdown("### Feedback / Comments")
                                     
-                                    # Show existing comments/feedback
+                                    # Show existing comments/feedback for this student
                                     if current_comments:
                                         st.markdown("#### Existing Feedback:")
                                         for comment in current_comments:
@@ -513,10 +518,11 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                                                 failed_criteria.append(criterion_id)
                                         
                                         # Submit feedback/comment if provided
+                                        feedback_result = True
                                         if new_feedback:
                                             status_placeholder.info("Submitting feedback...")
                                             try:
-                                                # Use the createComment function to submit feedback
+                                                # Use the createComment function to submit feedback specifically for this student
                                                 feedback_result = createComment(
                                                     st.session_state.selected_class_id,
                                                     selected_assignment_id,
@@ -530,6 +536,7 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                                                     status_placeholder.error("Failed to submit feedback")
                                             except Exception as e:
                                                 status_placeholder.error(f"Error submitting feedback: {str(e)}")
+                                                feedback_result = False
                                         
                                         # Show final status
                                         if success_count == len(grades_to_submit) and (not new_feedback or feedback_result):
@@ -573,110 +580,208 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                         else:
                             st.session_state.criteria = []
 
-                    # Add New Criterion button
-                    if st.button("Add New Criterion", use_container_width=True):
-                        new_criterion = {
-                            "criterion_id": -1,  # Indicates a new criterion
-                            "name": "New Criterion",
-                            "value": 10.0,
-                            "weight": 0.0
-                        }
-                        st.session_state.criteria.append(new_criterion)
-                        st.rerun()
+                    # Split screen layout
+                    left_col, right_col = st.columns(2)
 
-                    # Display criteria for deletion outside the form
-                    st.markdown("### Manage Criteria")
-                    if len(st.session_state.criteria) > 0:
-                        criterion_options = [f"{i+1}. {c.get('name', 'Unnamed')}" for i, c in enumerate(st.session_state.criteria)]
-                        selected_idx = st.selectbox(
-                            "Select criterion to delete",
-                            options=["None"] + criterion_options,
-                            index=0
-                        )
-                        
-                        if selected_idx != "None" and st.button("🗑️ Delete Selected Criterion", type="primary", use_container_width=True):
-                            index_to_remove = int(selected_idx.split('.')[0]) - 1
-                            criterion_to_remove = st.session_state.criteria[index_to_remove]
-                            
-                            # If this is an existing criterion (has a valid criterion_id), delete it from database
-                            if criterion_to_remove.get('criterion_id', -1) > 0:
-                                # Use deleteAssignmentCriterion function
-                                success = deleteAssignmentCriterion(
-                                    st.session_state.selected_class_id, 
-                                    selected_assignment_id, 
-                                    criterion_to_remove['criterion_id']
-                                )
-                                
-                                if success:
-                                    st.success(f"Criterion '{criterion_to_remove.get('name')}' deleted successfully")
-                            
-                            # Remove from session state
-                            st.session_state.criteria.pop(index_to_remove)
+                    # Left column: Assignment details
+                    with left_col:
+                        # Add New Criterion button
+                        if st.button("Add New Criterion", use_container_width=True):
+                            new_criterion = {
+                                "criterion_id": -1,  # Indicates a new criterion
+                                "name": "New Criterion",
+                                "value": 10.0,
+                                "weight": 0.0
+                            }
+                            st.session_state.criteria.append(new_criterion)
                             st.rerun()
 
-                    # Now create the form for editing assignment details
-                    with st.form("edit_assignment_form"):
-                        st.subheader("Edit Assignment Details")
-                        
-                        # Assignment basic info
-                        assignment_name = st.text_input(
-                            "Assignment Name", 
-                            value=selected_assignment.get('name', '')
-                        )
-                        
-                        due_date_str = selected_assignment.get('due_date', '')
-                        try:
-                            import datetime
-                            # Parse the date string into a datetime object
-                            # This assumes the date format is "YYYY-MM-DD"
-                            due_date_parts = due_date_str.split('-')
-                            if len(due_date_parts) == 3:
-                                year, month, day = map(int, due_date_parts)
-                                default_date = datetime.date(year, month, day)
-                            else:
-                                default_date = datetime.date.today()
-                        except:
-                            default_date = datetime.date.today()
+                        # Assignment details form
+                        with st.form("edit_assignment_form"):
+                            st.subheader("Assignment Details")
                             
-                        due_date = st.date_input(
-                            "Due Date", 
-                            value=default_date
-                        )
+                            # Assignment basic info
+                            assignment_name = st.text_input(
+                                "Assignment Name", 
+                                value=selected_assignment.get('name', '')
+                            )
+                            
+                            due_date_str = selected_assignment.get('due_date', '')
+                            try:
+                                import datetime
+                                # Parse the date string into a datetime object
+                                due_date_parts = due_date_str.split('-')
+                                if len(due_date_parts) == 3:
+                                    year, month, day = map(int, due_date_parts)
+                                    default_date = datetime.date(year, month, day)
+                                else:
+                                    default_date = datetime.date.today()
+                            except:
+                                default_date = datetime.date.today()
+                                
+                            due_date = st.date_input(
+                                "Due Date", 
+                                value=default_date
+                            )
+                            
+                            weight = st.number_input(
+                                "Overall Weight (%)", 
+                                min_value=0.0, 
+                                max_value=100.0, 
+                                value=float(selected_assignment.get('overall_weight', 0)) * 100,
+                                step=5.0
+                            ) / 100
+                            
+                            description = st.text_area(
+                                "Assignment Description", 
+                                value=selected_assignment.get('description', ''),
+                                height=100
+                            )
+                            
+                            # Submit button
+                            submit = st.form_submit_button("Save Changes", type="primary", use_container_width=True)
+                            
+                            criteria_updates = []
+                            
+                            # Prepare criteria updates from session state
+                            for i, criterion in enumerate(st.session_state.criteria):
+                                criterion_update = {
+                                    "criterion_id": criterion.get('criterion_id'),
+                                    "name": criterion.get('name', ''),
+                                    "value": criterion.get('value', 10.0),
+                                    "weight": criterion.get('weight', 0.0)
+                                }
+                                criteria_updates.append(criterion_update)
+                            
+                            # Calculate total weight - FIXED
+                            total_weight = 0
+                            for c in criteria_updates:
+                                try:
+                                    # Make sure weight is a float
+                                    weight = float(c["weight"])
+                                    total_weight += weight * 100
+                                except (ValueError, TypeError):
+                                    # Skip any invalid weights
+                                    pass
+                            
+                            # Form submission handler
+                            if submit:
+                                if not assignment_name:
+                                    st.error("Assignment name is required")
+                                elif abs(total_weight - 100) > 0.01 and len(st.session_state.criteria) > 0:
+                                    # Only error if there are criteria and weight doesn't sum to 100
+                                    st.error("Criteria weights must sum to 100%")
+                                else:
+                                    success = True
+                                    
+                                    # Update assignment basic info
+                                    assignment_updated = updateAssignmnet(
+                                        class_id=st.session_state.selected_class_id,
+                                        assignment_id=selected_assignment_id,
+                                        name=assignment_name,
+                                        due=due_date.strftime("%Y-%m-%d"),
+                                        weight=weight
+                                    )
+                                    
+                                    if not assignment_updated:
+                                        st.error("Failed to update assignment details")
+                                        success = False
+                                    
+                                    # Update or create criteria
+                                    for criterion in criteria_updates:
+                                        criterion_id = criterion["criterion_id"]
+                                        
+                                        if criterion_id and criterion_id > 0:
+                                            # Update existing criterion - direct API call to fix endpoint issue
+                                            data = {
+                                                'name': criterion["name"],
+                                                'value': criterion["value"],
+                                                'weight': criterion["weight"]
+                                            }
+                                            
+                                            # Fix for the incorrect URL in updateAssignmentCriterion
+                                            result = safePut(
+                                                f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}/{selected_assignment_id}/{criterion_id}",
+                                                data
+                                            )
+                                            
+                                            if result.status_code != 200:
+                                                st.error(f"Failed to update criterion: {criterion['name']}")
+                                                success = False
+                                        else:
+                                            # Create new criterion
+                                            new_criterion_id = createAssignmentCriterion(
+                                                class_id=st.session_state.selected_class_id,
+                                                assignment_id=selected_assignment_id,
+                                                name=criterion["name"],
+                                                value=criterion["value"],
+                                                weight=criterion["weight"]
+                                            )
+                                            
+                                            if not new_criterion_id:
+                                                st.error(f"Failed to create criterion: {criterion['name']}")
+                                                success = False
+                                    
+                                    if success:
+                                        st.success("Assignment updated successfully!")
+                                        # Reset state to show updated information
+                                        if "criteria" in st.session_state:
+                                            del st.session_state.criteria
+                                        st.rerun()
+                    
+                    # Right column: Criteria management
+                    with right_col:
+                        st.subheader("Assignment Criteria")
                         
-                        weight = st.number_input(
-                            "Overall Weight (%)", 
-                            min_value=0.0, 
-                            max_value=100.0, 
-                            value=float(selected_assignment.get('overall_weight', 0)) * 100,
-                            step=5.0
-                        ) / 100
-                        
-                        description = st.text_area(
-                            "Assignment Description", 
-                            value=selected_assignment.get('description', ''),
-                            height=100
-                        )
-                        
-                        # Criteria section
-                        st.markdown("### Assignment Criteria")
+                        # Weight validation notice
+                        total_weight = 0
+                        for c in st.session_state.criteria:
+                            try:
+                                weight = float(c.get('weight', 0))
+                                total_weight += weight * 100
+                            except (ValueError, TypeError):
+                                pass
+                                
+                        if abs(total_weight - 100) > 0.01 and len(st.session_state.criteria) > 0:
+                            st.warning(f"Total criteria weight is {total_weight:.1f}%. It should equal 100%.")
                         
                         # Display criteria with edit fields
-                        criteria_updates = []
-                        total_weight = 0
-                        
                         for i, criterion in enumerate(st.session_state.criteria):
                             with st.container(border=True):
-                                st.markdown(f"#### Criterion {i+1}")
+                                # Inline layout with delete button
+                                header_col, delete_col = st.columns([9, 1])
+                                with delete_col:
+                                    if st.button("🗑️", key=f"remove_criterion_{i}", help="Delete this criterion"):
+                                        # If this is an existing criterion, delete it from database
+                                        criterion_id = criterion.get('criterion_id')
+                                        if criterion_id and criterion_id > 0:
+                                            success = deleteAssignmentCriterion(
+                                                st.session_state.selected_class_id, 
+                                                selected_assignment_id, 
+                                                criterion_id
+                                            )
+                                            
+                                            if success:
+                                                st.success(f"Criterion deleted successfully")
+                                        
+                                        # Remove from session state
+                                        st.session_state.criteria.pop(i)
+                                        st.rerun()
                                 
-                                cols = st.columns([3, 1, 1])
-                                with cols[0]:
-                                    criterion_name = st.text_input(
-                                        "Name", 
-                                        value=criterion.get('name', ''),
-                                        key=f"criterion_name_{i}"
-                                    )
+                                # Streamlined input fields without redundant labels
+                                criterion_name = st.text_input(
+                                    "Criterion name",
+                                    value=criterion.get('name', ''),
+                                    key=f"criterion_name_{i}",
+                                    placeholder="Enter criterion name"
+                                )
                                 
-                                with cols[1]:
+                                # Store updates directly in session state for immediate effect
+                                st.session_state.criteria[i]['name'] = criterion_name
+                                
+                                # Value and weight in same row
+                                value_col, weight_col = st.columns(2)
+                                with value_col:
                                     criterion_value = st.number_input(
                                         "Points", 
                                         min_value=0.0,
@@ -684,8 +789,9 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                                         value=float(criterion.get('value', 10)),
                                         key=f"criterion_value_{i}"
                                     )
+                                    st.session_state.criteria[i]['value'] = criterion_value
                                 
-                                with cols[2]:
+                                with weight_col:
                                     criterion_weight = st.number_input(
                                         "Weight (%)", 
                                         min_value=0.0,
@@ -694,140 +800,7 @@ elif st.session_state.selected_section == "grade_assignments" and canGradeAssign
                                         value=float(criterion.get('weight', 0)) * 100,
                                         key=f"criterion_weight_{i}"
                                     ) / 100
-                                
-                                total_weight += criterion_weight * 100
-                                
-                                # Store updated criterion
-                                criterion_update = {
-                                    "criterion_id": criterion.get('criterion_id'),
-                                    "name": criterion_name,
-                                    "value": criterion_value,
-                                    "weight": criterion_weight
-                                }
-                                criteria_updates.append(criterion_update)
-                        
-                        # Weight validation
-                        if abs(total_weight - 100) > 0.01:
-                            st.warning(f"Total criteria weight is {total_weight:.1f}%. It should equal 100%.")
-                        
-                        # Form submission
-                        submit = st.form_submit_button("Save Changes", type="primary")
-                        
-                        if submit:
-                            if not assignment_name:
-                                st.error("Assignment name is required")
-                            elif abs(total_weight - 100) > 0.01 and len(st.session_state.criteria) > 0:
-                                # Only error if there are criteria and weight doesn't sum to 100
-                                st.error("Criteria weights must sum to 100%")
-                            else:
-                                success = True
-                                
-                                # Update assignment basic info
-                                assignment_updated = updateAssignmnet(
-                                    class_id=st.session_state.selected_class_id,
-                                    assignment_id=selected_assignment_id,
-                                    name=assignment_name,
-                                    due=due_date.strftime("%Y-%m-%d"),
-                                    weight=weight
-                                )
-                                
-                                if not assignment_updated:
-                                    st.error("Failed to update assignment details")
-                                    success = False
-                                
-                                # Update or create criteria
-                                for criterion in criteria_updates:
-                                    criterion_id = criterion["criterion_id"]
-                                    
-                                    if criterion_id and criterion_id > 0:
-                                        # Update existing criterion
-                                        criterion_updated = updateAssignmentCriterion(
-                                            class_id=st.session_state.selected_class_id,
-                                            assignment_id=selected_assignment_id,
-                                            criterion_id=criterion_id,
-                                            name=criterion["name"],
-                                            value=criterion["value"],
-                                            weight=criterion["weight"]
-                                        )
-                                        
-                                        if not criterion_updated:
-                                            st.error(f"Failed to update criterion: {criterion['name']}")
-                                            success = False
-                                    else:
-                                        # Create new criterion
-                                        new_criterion_id = createAssignmentCriterion(
-                                            class_id=st.session_state.selected_class_id,
-                                            assignment_id=selected_assignment_id,
-                                            name=criterion["name"],
-                                            value=criterion["value"],
-                                            weight=criterion["weight"]
-                                        )
-                                        
-                                        if not new_criterion_id:
-                                            st.error(f"Failed to create criterion: {criterion['name']}")
-                                            success = False
-                                
-                                if success:
-                                    st.success("Assignment updated successfully!")
-                                    # Reset state to show updated information
-                                    if "criteria" in st.session_state:
-                                        del st.session_state.criteria
-                                    st.rerun()
-                    
-                    # Comment Management Section
-                    st.markdown("### Manage Comments")
-                    
-                    # Get existing comments
-                    try:
-                        comments = getComments(st.session_state.selected_class_id, selected_assignment_id)
-                        
-                        if comments and len(comments) > 0:
-                            st.markdown("#### Existing Comments:")
-                            for comment in comments:
-                                author = f"{comment.get('author_first_name', 'Unknown')} {comment.get('author_last_name', 'User')}"
-                                message = comment.get('message', 'No content')
-                                created_on = comment.get('created_on', 'Unknown date')
-                                
-                                st.markdown(f"""
-                                <div style='margin-bottom: 1rem; padding: 0.75rem; background-color: #f5f5f5; border-radius: 6px;'>
-                                    <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
-                                    <p style='margin: 0;'>{message}</p>
-                                </div>
-                                """, unsafe_allow_html=True)
-                        else:
-                            st.info("No comments available for this assignment.")
-                    except Exception as e:
-                        st.error(f"Error fetching comments: {str(e)}")
-                    
-                    # Add new comment form
-                    with st.form("add_comment_form"):
-                        st.markdown("#### Add Comment")
-                        
-                        # Comment input
-                        comment_text = st.text_area("Comment", height=150)
-                        
-                        # Submit button
-                        submit_comment = st.form_submit_button("Add Comment", type="primary")
-                        
-                        if submit_comment:
-                            if comment_text:
-                                try:
-                                    # Use the createComment function to add a new comment
-                                    success = createComment(
-                                        st.session_state.selected_class_id,
-                                        selected_assignment_id,
-                                        comment_text
-                                    )
-                                    
-                                    if success:
-                                        st.success("Comment added successfully!")
-                                        st.rerun()
-                                    else:
-                                        st.error("Failed to add comment.")
-                                except Exception as e:
-                                    st.error(f"Error adding comment: {str(e)}")
-                            else:
-                                st.error("Comment text cannot be empty.")
+                                    st.session_state.criteria[i]['weight'] = criterion_weight
             else:
                 st.error("Could not find selected assignment")
     
