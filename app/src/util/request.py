@@ -16,7 +16,6 @@ def safeGet(URL):
     except requests.exceptions.HTTPError:
         st.switch_page(EXCEPTION_REDIRECT)
         return None
-    
 
 def safePost(URL,jsonData):
     """
@@ -51,7 +50,6 @@ def safeDelete(URL,jsonData):
         st.switch_page(EXCEPTION_REDIRECT)
         return None
     
-
 def getUserInfo() -> dict:
     """
     :rtype: dict
@@ -357,7 +355,6 @@ def getAssignmentCriterion(class_id : int, assignment_id : int,criterion_id : in
     """
     result = safeGet(f"{API}/assignmentCriteria/{st.session_state.get('session_key')}/{class_id}/{assignment_id}/{criterion_id}")
     return result.json().get(0,None)
-
 
 def createAssignmentCriterion(class_id : int, assignment_id : int ,name : str,value : int,weight : float) -> int:
     """
