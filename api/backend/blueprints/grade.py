@@ -53,7 +53,7 @@ def grade(session_key,class_id,assignment_id,student_id):
         student_id = user_id
     else:
         if (not isClassMember(student_id,class_id)):
-            return respond("",CODE_ACCESS_DENIED)
+            return respond("",CODE_INVALID_FORMAT)
         if (not perms.get("CAN_GRADE_ASSIGNMENT",False)):
             return respond("",CODE_ACCESS_DENIED)
         
