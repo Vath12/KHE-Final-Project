@@ -21,7 +21,7 @@ def comment(session_key,class_id,assignment_id,student_id):
     
     perms = getUserClassPermissions(user_id,class_id)
 
-    if (not perms.get("CAN_GRADE_ASSIGNMENTS",False)):
+    if (user_id != student_id and not perms.get("CAN_GRADE_ASSIGNMENTS",False)):
         return respond("",CODE_ACCESS_DENIED)
     
     args = request.get_json(force=True)
@@ -46,21 +46,48 @@ def comment(session_key,class_id,assignment_id,student_id):
         result = cursor.fetchall()
         return respond(jsonify(result),CODE_SUCCESS)
 
+    if (not perms.get("CAN_GRADE_ASSIGNMENTS",False)):
+        return respond("",CODE_ACCESS_DENIED)
+    
     if (request.method == "POST"):
         query = '''
-        INSERT INTO Comments (class_id,name,due_date,overall_weight) VALUES
-        (%s,%s,%s,%s)
+        INSERT INTO Comments (class_id,author_id,student_id,assignment_id,message) VALUES
+        (%s,%s,%s,%s,%s)
         '''
         cursor.execute(query,(
             class_id,
-            args.get("name","Untitled"),
-            args.get("due_date","ADDTIME(CURRENT_TIMESTAMP, '1:00:00:00')"),
-            args.get("overall_weight",1)
+            user_id,
+            student_id,
+            assignment_id,
+            args.get("message","")
         ))
-
         database.get_db().commit()
         return respond("",CODE_SUCCESS)
     if (request.method == "PUT"):
+        query = '''
+        UPDATE Comments SET 
+        message=%s,
+        WHERE
+        author_id = %s AND
+        comment_id = %s AND
+        class_id = %s
+        '''
+        cursor.execute(query,(
+            args.get("message",""),
+            user_id,
+            args.get("comment_id",-1),
+            class_id
+        ))
+        database.get_db().commit()
         return respond("",CODE_SUCCESS)
     if (request.method == "DELETE"):
+        query = '''
+        DELETE FROM Comments WHERE comment_id = %s AND author_id = %s AND class_id = %s
+        '''
+        cursor.execute(query,(
+            user_id,
+            args.get("comment_id",-1),
+            class_id
+        ))
+        database.get_db().commit()
         return respond("",CODE_SUCCESS)
