@@ -457,7 +457,7 @@ def createAnnouncement(class_id : int,title : str, message : str) -> bool:
         'message' : message
     }
     result = safePost(f"{API}/announcements/{st.session_state.get('session_key')}/{class_id}",data)
-    return result.json()
+    return result.status_code == 200
 
 def updateAnnouncement(class_id : int,announcement_id : int, title : str, message : str) -> bool:
     """
