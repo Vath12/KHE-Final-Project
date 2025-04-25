@@ -77,7 +77,7 @@ def class_permissions(session_key,class_id,target_id):
     if (user_id == -1 or not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     
-    if (target_id == -1):
+    if (int(target_id) == -1):
         target_id = user_id
     
     if (request.method == "GET"):
