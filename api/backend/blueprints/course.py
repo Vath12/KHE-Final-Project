@@ -69,16 +69,19 @@ def get_class_list(session_key):
     result = cursor.fetchall()
     return respond(jsonify(result),CODE_SUCCESS)
 
-@classes.route('/classPermissions/<session_key>/<class_id>',methods = ["GET","POST"])
-def class_permissions(session_key,class_id):
+@classes.route('/classPermissions/<session_key>/<class_id>/<target_id>',methods = ["GET","POST"])
+def class_permissions(session_key,class_id,target_id):
     cursor = database.get_db().cursor()
     user_id = userIDFromSessionKey(session_key)
     
     if (user_id == -1 or not isClassMember(user_id,class_id)):
         return respond("",CODE_ACCESS_DENIED)
     
+    if (target_id == -1):
+        target_id = user_id
+    
     if (request.method == "GET"):
-        return respond(jsonify(getUserClassPermissions(user_id,class_id)),CODE_SUCCESS)
+        return respond(jsonify(getUserClassPermissions(target_id,class_id)),CODE_SUCCESS)
     
     if (request.method == "POST"):
 

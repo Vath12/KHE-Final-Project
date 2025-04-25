@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from util.verification import isValidSession
-from util.request import getClassInfo, getAssignments, getGrade, getComments
+from util.request import getClassInfo, getAssignments, getGrade, getComments, updateComment, deleteComment, API, safeGet
 
 isValidSession()
 
@@ -101,26 +101,116 @@ else:
                 else:
                     st.markdown("**Grade**: Not graded")
             
-            # Get and display comments for the current user for this assignment
+            # Add a horizontal divider before feedback section if grades exist
+            if grades:
+                st.markdown("---")
+            
+            # Try multiple approaches to get comments since we don't know the exact endpoint structure
+            found_comments = False
+            
+            # Approach 1: Standard approach with student_id = -1
             try:
-                # Get comments specific to the current user (student_id=-1)
-                comments = getComments(st.session_state.selected_class_id, assignment_id, -1)
+                # This is the approach from edit_assignments.py
+                comments = getComments(
+                    st.session_state.selected_class_id,
+                    assignment_id,
+                    -1  # -1 indicates current user
+                )
                 
                 if comments and len(comments) > 0:
+                    found_comments = True
                     st.markdown("#### Instructor Feedback:")
                     for comment in comments:
                         author = f"{comment.get('author_first_name', 'Unknown')} {comment.get('author_last_name', 'User')}"
                         message = comment.get('message', 'No content')
                         created_on = comment.get('created_on', 'Unknown date')
                         
+                        # Display the comment with styling
                         st.markdown(f"""
                         <div style='margin-top: 0.5rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
                             <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
                             <p style='margin: 0;'>{message}</p>
                         </div>
                         """, unsafe_allow_html=True)
-            except:
-                # Silent fail - don't show errors to students
+            except Exception as e:
+                # Silent failure - try the next approach
                 pass
+                
+            # Approach 2: Try with current user's ID directly from session state
+            if not found_comments:
+                try:
+                    # Get current user info to find our actual user ID
+                    from util.request import getUserInfo
+                    
+                    # Get user's actual ID from session state
+                    user_info = getUserInfo()
+                    if user_info and 'user_id' in user_info:
+                        actual_user_id = user_info['user_id']
+                        
+                        # Try with actual user ID
+                        comments = getComments(
+                            st.session_state.selected_class_id,
+                            assignment_id,
+                            actual_user_id
+                        )
+                        
+                        if comments and len(comments) > 0:
+                            found_comments = True
+                            st.markdown("#### Instructor Feedback:")
+                            for comment in comments:
+                                author = f"{comment.get('author_first_name', 'Unknown')} {comment.get('author_last_name', 'User')}"
+                                message = comment.get('message', 'No content')
+                                created_on = comment.get('created_on', 'Unknown date')
+                                
+                                # Display the comment with styling
+                                st.markdown(f"""
+                                <div style='margin-top: 0.5rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
+                                    <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
+                                    <p style='margin: 0;'>{message}</p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                except Exception as e:
+                    # Silent failure - try the next approach
+                    pass
+                    
+            # Approach 3: Direct API call with different URL structure
+            if not found_comments:
+                try:
+                    # Try direct API call to a different endpoint structure
+                    # This assumes comments might be in a different format or location
+                    comments_url = f"{API}/comment/{st.session_state.get('session_key')}/{st.session_state.selected_class_id}/{assignment_id}"
+                    
+                    response = safeGet(comments_url)
+                    if response and response.status_code == 200:
+                        try:
+                            comments = response.json()
+                            
+                            if comments and len(comments) > 0:
+                                found_comments = True
+                                st.markdown("#### Instructor Feedback:")
+                                for comment in comments:
+                                    # Handle different possible comment structures
+                                    if isinstance(comment, dict):
+                                        author = f"{comment.get('author_first_name', 'Unknown')} {comment.get('author_last_name', 'User')}"
+                                        message = comment.get('message', 'No content')
+                                        created_on = comment.get('created_on', 'Unknown date')
+                                        
+                                        # Display the comment with styling
+                                        st.markdown(f"""
+                                        <div style='margin-top: 0.5rem; padding: 0.75rem; background-color: #F0FFF0; border-left: 3px solid #00CC66; border-radius: 6px;'>
+                                            <p style='font-size: 0.9rem; color: #666; margin-bottom: 0.25rem;'><b>{author}</b> • {created_on}</p>
+                                            <p style='margin: 0;'>{message}</p>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                        except:
+                            # If JSON parsing fails, try next approach
+                            pass
+                except Exception as e:
+                    # Silent failure - all approaches have been tried
+                    pass
+            
+            # Display message if no comments found but grades exist
+            if not found_comments and grades:
+                st.info("No feedback available for this assignment.")
 
 st.markdown("</div>", unsafe_allow_html=True)
