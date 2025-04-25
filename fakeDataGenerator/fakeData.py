@@ -3,20 +3,27 @@ import hashlib,faker,random
 outputFile = 'boostrap.sql'
 
 
-numUsers = 50
-numCourses = 10
+numUsers = 500
+numCourses = 40
 
-users = 'INSERT INTO Users (username,password,first_name,last_name,email,bio) VALUES\n'
+users = 'INSERT INTO Users (user_id,username,password,first_name,last_name,email,bio) VALUES\n'
 fake = faker.Faker()
-for i in range(numUsers):
-    uname = fake.user_name()
+numbers = 0
+for i in range(1,numUsers+1):
+    uname = fake.user_name()+str(numbers)
     fname = fake.first_name()
     lname = fake.last_name()
     password = fake.password()
+    if (i == 1):
+        uname = "hamburger"
+        password = "password"
+        fname = "hammond"
+        lname = "burger"
+    numbers += random.randint(1,3)
     email = fake.email()
     bio = fake.text()
     users+=f"#password = {password}\n"
-    users+=f"('{uname}',0x{hashlib.sha256(password.encode('utf-8')).hexdigest()},'{fname}','{lname}','{email}','{bio}'),\n"
+    users+=f"({i},'{uname}',0x{hashlib.sha256(password.encode('utf-8')).hexdigest()},'{fname}','{lname}','{email}','{bio}'),\n"
 users = users.rstrip(",\n")+";"
 
 
@@ -48,7 +55,7 @@ for i in range(1,numCourses+1):
                 unique = False
                 break
     codes.append(code)
-    classes+=f"({i},'{fake.word()}','{fake.sentence()}','{codes[-1]}'),\n"
+    classes+=f"({i},'{fake.word()}','{(' ').join(fake.sentences(3))}','{fake.sentence()}','{codes[-1]}'),\n"
 classes = classes.rstrip(",\n")+";"
 
 memberships = "INSERT INTO Memberships VALUES\n"
@@ -66,9 +73,9 @@ for i in range(numCourses+1,numUsers+1):
     enrolled = []
     for k in range(random.randint(3,8)):
         #user_id course_id perms
-        id = random.randint(0,numCourses)
+        id = random.randint(1,numCourses)
         while (id in enrolled):
-            id = random.randint(0,numCourses)
+            id = random.randint(1,numCourses)
         members.append((i,id,TA if (random.randint(0,100)<5) else DEFAULT,1))
         enrolled.append(id)
 
@@ -80,11 +87,11 @@ work = "INSERT INTO Assignments VALUES\n"
 criteria = "INSERT INTO AssignmentCriteria VALUES\n"
 id = 1
 id2 = 1
-for i in range(numCourses):
+for i in range(1,numCourses+1):
     for k in range(random.randint(10,20)):
-        assignments[i].append([i,id,
+        assignments[i-1].append([i,id,
                             fake.sentence(),
-                            f'2025-{random.randint(1,5)}-{random.randint(0,30)} {random.randint(0,23)}:{random.randint(0,59)}:{random.randint(0,59)}',
+                            f'2025-{random.randint(1,5):02d}-{random.randint(1,27):02d} {random.randint(0,23):02d}:{random.randint(0,59):02d}:{random.randint(0,59):02d}',
                             random.randint(5,100)/100.0])
         for z in range(random.randint(1,5)):
             criteria += f"({id2},{i},{id},'{fake.sentence()}',{random.randint(0,100)},{random.randint(10,100)/100.0}),\n"
